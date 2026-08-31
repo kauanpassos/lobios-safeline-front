@@ -1,0 +1,151 @@
+/* src/index.css (Adições para a Autenticação) */
+
+:root {
+  /* Variáveis originais */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --color-surface: #ffffff;
+  --color-surface-dark: #0f172a;
+  --color-border-subtle: rgba(0, 0, 0, 0.1);
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.4);
+
+  /* Variáveis complementares (adicionadas para os componentes nativos funcionarem) */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #1d4ed8;
+  --color-danger: #ef4444;
+  --color-text-main: #0f172a;
+  --bg-input: transparent;
+  --bg-card-border: #cbd5e1;
+  --radius-md: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0f172a;
+    --color-border-subtle: rgba(255, 255, 255, 0.1);
+    --color-text-main: #f8fafc;
+    --bg-card-border: #334155;
+  }
+}
+
+/* Layout Estrutural */
+.auth-layout-grid {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .auth-layout-grid {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}
+
+.auth-brand-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  background-color: var(--color-surface-dark);
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.auth-form-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: var(--color-surface);
+}
+
+.auth-form-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Componentes Nativos (Sem JS inline) */
+.safeline-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.safeline-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: var(--bg-input);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.safeline-input:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.safeline-input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+}
+
+.safeline-input[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.safeline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+}
+
+.safeline-btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.safeline-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.safeline-btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.safeline-btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.safeline-btn-outline {
+  background-color: transparent;
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-main);
+}
+
+.safeline-btn-outline:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Redução de movimento para acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
