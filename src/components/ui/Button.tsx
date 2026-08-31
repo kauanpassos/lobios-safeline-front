@@ -19,7 +19,7 @@ export const Button = ({
   style,
   ...props
 }: ButtonProps) => {
-  const baseClass = `safeline-btn safeline-btn-${variant} ${fullWidth ? 'w-full' : ''} ${className}`;
+  const baseClass = `safeline-btn safeline-btn-${variant} ${className}`;
 
   return (
     <button
@@ -31,12 +31,12 @@ export const Button = ({
     >
       {isLoading ? (
         <>
-          <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
           <span>Processando...</span>
         </>
       ) : (
         <>
-          {icon && <span aria-hidden="true">{icon}</span>}
+          {icon && <span aria-hidden="true" style={{ display: 'flex', alignItems: 'center' }}>{icon}</span>}
           <span>{children}</span>
         </>
       )}

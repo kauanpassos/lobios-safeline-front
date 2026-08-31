@@ -1,33 +1,113 @@
-/* src/index.css (Adições para a Autenticação) */
+/* src/index.css */
 
 :root {
-  /* Variáveis originais */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --color-surface: #ffffff;
-  --color-surface-dark: #0f172a;
-  --color-border-subtle: rgba(0, 0, 0, 0.1);
-  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.4);
+  /* =========================================
+     Design Tokens - Light Mode (Default)
+     ========================================= */
+  
+  /* Backgrounds & Surfaces */
+  --bg-base: #f8fafc;        /* Outer background */
+  --bg-surface: #ffffff;     /* Main content area */
+  --bg-elevated: #ffffff;    /* Floating cards, nav bars */
+  --bg-brand: #0f172a;       /* Left panel, dark brand area */
 
-  /* Variáveis complementares (adicionadas para os componentes nativos funcionarem) */
-  --color-primary: #3b82f6;
+  /* Borders */
+  --border-subtle: #e2e8f0;
+  --border-strong: #94a3b8;
+  --border-focus: #3b82f6;
+
+  /* Typography */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748b;
+  --color-text-brand: #f8fafc; /* Text on brand background */
+  --color-text-brand-muted: #94a3b8;
+
+  /* Semantic Colors */
+  --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
-  --color-danger: #ef4444;
-  --color-text-main: #0f172a;
-  --bg-input: transparent;
-  --bg-card-border: #cbd5e1;
+  
+  --color-success: #10b981;
+  --bg-success-subtle: #d1fae5;
+  --color-success-text: #047857;
+
+  --color-error: #ef4444;
+  --bg-error-subtle: #fee2e2;
+  --color-error-text: #b91c1c;
+
+  /* Effects */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.03);
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  --focus-ring-error: 0 0 0 3px rgba(239, 68, 68, 0.2);
+
+  /* Layout */
   --radius-md: 8px;
+  --radius-sm: 6px;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-surface: #0f172a;
-    --color-border-subtle: rgba(255, 255, 255, 0.1);
-    --color-text-main: #f8fafc;
-    --bg-card-border: #334155;
+    /* =========================================
+       Design Tokens - Dark Mode
+       ========================================= */
+    
+    /* Backgrounds & Surfaces */
+    --bg-base: #020617;
+    --bg-surface: #0f172a;
+    --bg-elevated: #1e293b;
+    --bg-brand: #0f172a; /* Same in dark mode */
+
+    /* Borders */
+    --border-subtle: #1e293b;
+    --border-strong: #334155;
+    --border-focus: #60a5fa;
+
+    /* Typography */
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #94a3b8;
+    
+    /* Semantic Colors */
+    --color-primary: #3b82f6;
+    --color-primary-hover: #60a5fa;
+
+    --color-success: #10b981;
+    --bg-success-subtle: rgba(16, 185, 129, 0.15);
+    --color-success-text: #34d399;
+
+    --color-error: #ef4444;
+    --bg-error-subtle: rgba(239, 68, 68, 0.15);
+    --color-error-text: #f87171;
+
+    /* Effects */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+    --shadow-inner: inset 0 2px 4px 0 rgba(255, 255, 255, 0.05);
   }
 }
 
-/* Layout Estrutural */
+/* Base Reset & Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   Auth Layout Structural Classes
+   ========================================= */
 .auth-layout-grid {
   display: grid;
   min-height: 100vh;
@@ -45,8 +125,11 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 3rem;
-  background-color: var(--color-surface-dark);
-  border-right: 1px solid var(--color-border-subtle);
+  background-color: var(--bg-brand);
+  border-right: 1px solid var(--border-subtle);
+  color: var(--color-text-brand);
+  /* Subtle texture/gradient for depth without being loud */
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%);
 }
 
 .auth-form-panel {
@@ -55,7 +138,7 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  background-color: var(--color-surface);
+  background-color: var(--bg-surface);
 }
 
 .auth-form-container {
@@ -63,7 +146,44 @@
   max-width: 400px;
 }
 
-/* Componentes Nativos (Sem JS inline) */
+/* Segmented Control (Tabs) */
+.auth-segmented-control {
+  display: flex;
+  background-color: var(--bg-base);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-subtle);
+}
+
+.auth-tab-btn {
+  flex: 1;
+  padding: 0.625rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.auth-tab-btn:hover:not([aria-current="page"]) {
+  color: var(--color-text-primary);
+  background-color: rgba(0,0,0,0.02);
+}
+
+.auth-tab-btn[aria-current="page"] {
+  color: var(--color-text-primary);
+  background-color: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================================
+   Components (Input & Button)
+   ========================================= */
+
 .safeline-input-wrapper {
   position: relative;
   display: flex;
@@ -73,27 +193,37 @@
 .safeline-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: var(--bg-input);
-  border: 1px solid var(--bg-card-border);
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  color: var(--color-text-main);
+  color: var(--color-text-primary);
   font-size: 0.95rem;
   font-family: inherit;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
+  box-shadow: var(--shadow-inner);
+}
+
+.safeline-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.safeline-input:hover:not(:disabled) {
+  border-color: var(--border-strong);
 }
 
 .safeline-input:focus-visible {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
+  background-color: var(--bg-surface);
 }
 
 .safeline-input[aria-invalid="true"] {
-  border-color: var(--color-danger);
+  border-color: var(--color-error);
 }
 
 .safeline-input[aria-invalid="true"]:focus-visible {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  box-shadow: var(--focus-ring-error);
 }
 
 .safeline-btn {
@@ -109,6 +239,7 @@
   cursor: pointer;
   border: 1px solid transparent;
   outline: none;
+  user-select: none;
 }
 
 .safeline-btn:focus-visible {
@@ -123,24 +254,42 @@
 .safeline-btn-primary {
   background-color: var(--color-primary);
   color: #ffffff;
+  box-shadow: var(--shadow-sm);
 }
 
 .safeline-btn-primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
-  transform: translateY(-1px);
 }
 
-.safeline-btn-outline {
-  background-color: transparent;
-  border-color: var(--color-border-subtle);
-  color: var(--color-text-main);
+.safeline-btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
-.safeline-btn-outline:hover:not(:disabled) {
-  background-color: rgba(0, 0, 0, 0.05);
+/* =========================================
+   Utility Classes (Alerts, Typography)
+   ========================================= */
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
 }
 
-/* Redução de movimento para acessibilidade */
+.alert-error {
+  background-color: var(--bg-error-subtle);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-error-text);
+}
+
+.alert-success {
+  background-color: var(--bg-success-subtle);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: var(--color-success-text);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

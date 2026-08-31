@@ -80,8 +80,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       if (onSuccess) {
         setTimeout(onSuccess, 2000);
       }
-    } catch (err: any) {
-      setApiError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro inesperado ao conectar ao servidor.';
+      setApiError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -90,42 +91,34 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   if (isSuccess) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', padding: '12px 0' }}>
-        <div
-          style={{
-            padding: '16px',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-            borderRadius: '50%',
-            color: 'var(--color-accent-green)',
-            display: 'flex',
-          }}
-        >
+        <div style={{ padding: '16px', backgroundColor: 'var(--bg-success-subtle)', borderRadius: '50%', color: 'var(--color-success)', display: 'flex' }}>
           <CheckCircle2 size={36} />
         </div>
-        <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           Conta criada com sucesso!
         </h3>
-        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', maxWidth: '320px' }}>
-          Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais.
+        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', maxWidth: '320px', lineHeight: 1.5 }}>
+          Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais corporativas.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-main)' }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
           Criar nova conta
         </h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
           Cadastre-se para acompanhar suas manifestações no canal SafeLine.
         </p>
       </div>
 
       {apiError && (
-        <div style={{ display: 'flex', gap: '8px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#EF4444', fontSize: '0.85rem' }}>
-          <AlertCircle size={18} />
-          <span>{apiError}</span>
+        <div role="alert" className="alert alert-error">
+          <AlertCircle size={20} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{apiError}</span>
         </div>
       )}
 
@@ -185,7 +178,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         required
       />
 
-      <Button type="submit" variant="primary" fullWidth isLoading={isLoading} icon={<UserPlus size={18} />}>
+      <Button type="submit" variant="primary" fullWidth isLoading={isLoading} icon={<UserPlus size={18} />} style={{ marginTop: '0.5rem' }}>
         Cadastrar no SafeLine
       </Button>
     </form>
