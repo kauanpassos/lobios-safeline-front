@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock, UserPlus, CheckCircle2, User } from 'lucide-react';
+import { Mail, Lock, UserPlus, CheckCircle2, User, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import type { RegisterFormData } from '../../types/auth';
@@ -19,6 +19,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
@@ -43,20 +44,47 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 1. BLINDAGEM: Sanitiza os dados
+    const sanitizedEmail = formData.email.trim();
+    const sanitizedName = formData.name.trim();
+    setFormData(prev => ({ ...prev, email: sanitizedEmail, name: sanitizedName }));
+
     if (!validate()) return;
 
     setIsLoading(true);
+    setApiError(null);
 
-    // Simulação de cadastro
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      if (onSuccess) {
-        setTimeout(onSuccess, 1500);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      
+      const response = await fetch(`${apiUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sanitizedName,
+          email: sanitizedEmail,
+          password: formData.password
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Erro ao criar a conta. Tente novamente.');
       }
-    }, 1200);
+
+      setIsSuccess(true);
+      
+      if (onSuccess) {
+        setTimeout(onSuccess, 2000);
+      }
+    } catch (err: any) {
+      setApiError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSuccess) {
@@ -93,6 +121,13 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
           Cadastre-se para acompanhar suas manifestações no canal SafeLine.
         </p>
       </div>
+
+      {apiError && (
+        <div style={{ display: 'flex', gap: '8px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#EF4444', fontSize: '0.85rem' }}>
+          <AlertCircle size={18} />
+          <span>{apiError}</span>
+        </div>
+      )}
 
       <Input
         id="register-name"
