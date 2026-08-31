@@ -30,7 +30,7 @@ export const Input = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', ...style }}>
-      <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-main)' }}>
+      <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
         {label}
       </label>
 
@@ -77,13 +77,13 @@ export const Input = ({
       </div>
 
       {error && (
-        <span id={errorId} role="alert" style={{ fontSize: '0.8rem', color: 'var(--color-danger)', fontWeight: 500 }}>
+        <span id={errorId} role="alert" style={{ fontSize: '0.8rem', color: 'var(--color-error)', fontWeight: 500 }}>
           {error}
         </span>
       )}
 
       {helperText && !error && (
-        <span id={helperId} style={{ fontSize: '0.8rem', color: 'var(--color-text-dim)' }}>
+        <span id={helperId} style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
           {helperText}
         </span>
       )}

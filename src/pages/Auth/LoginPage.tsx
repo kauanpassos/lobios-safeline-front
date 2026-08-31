@@ -76,7 +76,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         setTimeout(() => onSuccess(sanitizedEmail), 800);
       }
     } catch (err: unknown) {
-      // TS Estrito: Checagem segura de erro ao invés de 'any'
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao conectar ao servidor.';
       setApiError(errorMessage);
     } finally {
@@ -91,29 +90,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-main)', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
           Acesso Seguro
         </h2>
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-          Insira suas credenciais para acessar o painel de manifestações.
+        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+          Insira suas credenciais corporativas para acessar o painel de denúncias.
         </p>
       </div>
 
       {apiError && (
-        <div 
-          role="alert" 
-          style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '1rem', backgroundColor: '#FEF2F2', borderLeft: '4px solid #EF4444', borderRadius: '4px', color: '#991B1B' }}
-        >
+        <div role="alert" className="alert alert-error">
           <AlertCircle size={20} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{apiError}</span>
         </div>
       )}
 
       {successMessage && (
-        <div
-          role="status"
-          style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '1rem', backgroundColor: '#ECFDF5', borderLeft: '4px solid #10B981', borderRadius: '4px', color: '#065F46' }}
-        >
+        <div role="status" className="alert alert-success">
           <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{successMessage}</span>
         </div>
@@ -135,7 +128,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           required
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <Input
             id="login-password"
             type="password"
@@ -157,7 +150,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 e.preventDefault();
                 alert('Funcionalidade de recuperação de senha será ativada no próximo passo!');
               }}
-              style={{ fontSize: '0.8rem', color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600 }}
+              style={{ fontSize: '0.8rem', color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600, padding: '0.25rem 0' }}
             >
               Esqueci minha senha
             </a>
@@ -173,7 +166,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         icon={<LogIn size={18} />}
         style={{ marginTop: '0.5rem' }}
       >
-        Entrar na Conta
+        Entrar no Portal
       </Button>
     </form>
   );
