@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AuthLayout } from './pages/Auth/AuthLayout';
 import { LoginPage } from './pages/Auth/LoginPage';
 import { RegisterPage } from './pages/Auth/RegisterPage';
-import { CreateReportPage } from './pages/Reports/CreateReportPage';
+import { CreateCasePage } from './pages/Cases/CreateCasePage';
 import { Badge } from './components/ui/Badge';
 import { Button } from './components/ui/Button';
 import { Logo } from './components/Logo';
@@ -11,7 +11,7 @@ import { LogOut, FileText, Send, MessageSquarePlus } from 'lucide-react';
 function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isCreatingReport, setIsCreatingReport] = useState(false);
+  const [isCreatingCase, setIsCreatingCase] = useState(false);
 
   const handleLoginSuccess = (email: string) => {
     setUserEmail(email);
@@ -20,7 +20,7 @@ function App() {
   const handleLogout = () => {
     setUserEmail(null);
     setActiveTab('login');
-    setIsCreatingReport(false);
+    setIsCreatingCase(false);
     localStorage.removeItem('@SafeLine:token');
   };
 
@@ -40,8 +40,8 @@ function App() {
         </header>
 
         <main style={{ width: '100%', maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {isCreatingReport ? (
-            <CreateReportPage onBack={() => setIsCreatingReport(false)} />
+          {isCreatingCase ? (
+            <CreateCasePage onBack={() => setIsCreatingCase(false)} />
           ) : (
             <div className="glass-card fade-in" style={{ padding: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -73,7 +73,7 @@ function App() {
                   <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                     Crie uma nova sugestão ou denúncia anônima para a empresa.
                   </p>
-                  <Button variant="primary" style={{ marginTop: 'auto' }} icon={<Send size={16} />} onClick={() => setIsCreatingReport(true)}>
+                  <Button variant="primary" style={{ marginTop: 'auto' }} icon={<Send size={16} />} onClick={() => setIsCreatingCase(true)}>
                     Criar Relato
                   </Button>
                 </div>
