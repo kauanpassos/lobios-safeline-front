@@ -3,6 +3,7 @@ import { Mail, Lock, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import type { LoginFormData } from '../../types/auth';
+import { apiFetch } from '../../services/api';
 
 interface LoginPageProps {
   onSuccess?: (email: string) => void;
@@ -49,22 +50,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setApiError(null);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      const data = await apiFetch<{ token?: string }>('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: sanitizedEmail,
           password: formData.password
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Credenciais inválidas. Verifique seus dados.');
-      }
 
       if (data.token) {
         localStorage.setItem('@SafeLine:token', data.token);

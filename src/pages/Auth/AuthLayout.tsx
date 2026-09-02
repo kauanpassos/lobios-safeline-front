@@ -11,7 +11,6 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
   return (
     <div className="auth-layout-grid">
 
-      {/* Esquerda: Contexto, Marca e Segurança (Atmosphere Layer) */}
       <div className="auth-brand-panel">
         <Logo size="lg" showSubtitle={false} />
 
@@ -60,11 +59,9 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
         </span>
       </div>
 
-      {/* Direita: Interação Principal (Main Surface) */}
       <div className="auth-form-panel">
         <div className="auth-form-container">
 
-          {/* Navegação de Contexto - Segmented Control */}
           <nav aria-label="Opções de acesso" className="auth-segmented-control">
             <button
               type="button"
@@ -83,8 +80,7 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
               Criar Conta
             </button>
           </nav>
-
-          {/* Formulário injetado */}
+          
           {children}
 
         </div>

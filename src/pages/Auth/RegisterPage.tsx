@@ -3,6 +3,7 @@ import { Mail, Lock, UserPlus, CheckCircle2, User, AlertCircle } from 'lucide-re
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import type { RegisterFormData } from '../../types/auth';
+import { apiFetch } from '../../services/api';
 
 interface RegisterPageProps {
   onSuccess?: () => void;
@@ -58,22 +59,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     setApiError(null);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
-      
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      await apiFetch('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: sanitizedName,
           email: sanitizedEmail,
           password: formData.password
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Erro ao criar a conta. Tente novamente.');
-      }
 
       setIsSuccess(true);
       
