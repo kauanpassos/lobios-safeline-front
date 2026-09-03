@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Lock, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -19,6 +19,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: Partial<LoginFormData> = {};
@@ -58,15 +67,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         }),
       });
 
-      if (data.token) {
+      // Validação estrita do token retornado pelo backend
+      if (data && data.token && typeof data.token === 'string') {
         localStorage.setItem('@SafeLine:token', data.token);
+        
+        setSuccessMessage('Autenticado com sucesso. Redirecionando...');
+        
+        if (onSuccess) {
+          redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedEmail), 800);
+        }
+      } else {
+        setApiError('Falha na autenticação: Token não recebido ou inválido.');
       }
-
-      setSuccessMessage('Autenticado com sucesso. Redirecionando...');
       
-      if (onSuccess) {
-        setTimeout(() => onSuccess(sanitizedEmail), 800);
-      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro inesperado ao conectar ao servidor.';
       setApiError(errorMessage);

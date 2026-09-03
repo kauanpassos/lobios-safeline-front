@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5016';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5016';
 const TOKEN_STORAGE_KEY = '@SafeLine:token';
 
 export class ApiError extends Error {
@@ -23,31 +23,42 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
-    ...options,
-    headers,
-  });
-  const responseText = await response.text();
-  let data: unknown;
+  try {
+    const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
+      ...options,
+      headers,
+    });
+    
+    const responseText = await response.text();
+    let data: unknown;
 
-  if (responseText) {
-    try {
-      data = JSON.parse(responseText);
-    } catch {
-      data = responseText;
+    if (responseText) {
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        data = responseText;
+      }
     }
+
+    if (!response.ok) {
+      // Registra o erro real no console para debug, mas não repassa para a UI
+      console.error(`[API Error] Status ${response.status}:`, data);
+      
+      throw new ApiError(
+        'Ocorreu um erro na comunicação com o servidor. Tente novamente mais tarde.',
+        response.status,
+        null
+      );
+    }
+
+    return data as T;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    
+    // Captura falhas puras de rede (fetch failed, CORS, etc)
+    console.error('API Network Error:', error);
+    throw new Error('Erro de conexão. Verifique sua internet ou tente mais tarde.', { cause: error });
   }
-
-  if (!response.ok) {
-    const errorData = typeof data === 'object' && data !== null ? data as Record<string, unknown> : {};
-    const message = typeof errorData.detail === 'string'
-      ? errorData.detail
-      : typeof errorData.message === 'string'
-        ? errorData.message
-        : 'Ocorreu um erro ao comunicar com o servidor.';
-
-    throw new ApiError(message, response.status, data);
-  }
-
-  return data as T;
 }
