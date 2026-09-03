@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Lock, UserPlus, CheckCircle2, User, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -21,6 +21,15 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current !== null) {
+        window.clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const validate = (): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
@@ -50,7 +59,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     
     // 1. BLINDAGEM: Sanitiza os dados
     const sanitizedEmail = formData.email.trim();
-    const sanitizedName = formData.name.trim();
+    const sanitizedName = formData.name?.trim() ?? '';
     setFormData(prev => ({ ...prev, email: sanitizedEmail, name: sanitizedName }));
 
     if (!validate()) return;
@@ -71,7 +80,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       setIsSuccess(true);
       
       if (onSuccess) {
-        setTimeout(onSuccess, 2000);
+        redirectTimeoutRef.current = window.setTimeout(onSuccess, 2000);
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro inesperado ao conectar ao servidor.';

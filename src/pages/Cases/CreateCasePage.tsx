@@ -11,13 +11,20 @@ interface CreateCasePageProps {
 export const CreateCasePage: React.FC<CreateCasePageProps> = ({ onBack }) => {
   const [content, setContent] = useState('');
   const [categoryId, setCategoryId] = useState(''); 
-  const [turnstileToken] = useState('token-temporario-para-teste');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [protocol, setProtocol] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Trava de segurança: impede o envio se o token do Turnstile não estiver presente
+    if (!turnstileToken) {
+      setError('Por favor, valide o sistema anti-bot (Turnstile) antes de enviar.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -34,6 +41,7 @@ export const CreateCasePage: React.FC<CreateCasePageProps> = ({ onBack }) => {
       setProtocol(data.protocol);
       setContent('');
       setCategoryId('');
+      setTurnstileToken(''); // Reseta para a próxima manifestação
       
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -134,6 +142,21 @@ export const CreateCasePage: React.FC<CreateCasePageProps> = ({ onBack }) => {
             }}
             placeholder="Descreva a situação com o máximo de detalhes possível (onde, quando, quem estava envolvido)..."
           />
+        </div>
+
+        {/* Local destinado ao componente Cloudflare Turnstile */}
+        <div style={{ padding: '8px 0' }}>
+          {!turnstileToken && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setTurnstileToken('simulacao-token-dev')}
+              style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+            >
+              [Dev] Simular Validação Captcha
+            </Button>
+          )}
+          {turnstileToken && <span style={{ color: '#10B981', fontSize: '0.8rem' }}>✓ Captcha validado</span>}
         </div>
 
         <Button 
