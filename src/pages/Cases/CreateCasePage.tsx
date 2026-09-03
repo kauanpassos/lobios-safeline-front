@@ -19,7 +19,6 @@ export const CreateCasePage: React.FC<CreateCasePageProps> = ({ onBack }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Trava de segurança: impede o envio se o token do Turnstile não estiver presente
     if (!turnstileToken) {
       setError('Por favor, valide o sistema anti-bot (Turnstile) antes de enviar.');
       return;

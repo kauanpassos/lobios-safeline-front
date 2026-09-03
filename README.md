@@ -1,75 +1,83 @@
-# React + TypeScript + Vite
+# SafeLine Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![Firebase Hosting](https://img.shields.io/badge/Deploy-Firebase%20Hosting-FFCA28?logo=firebase&logoColor=20232A)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-Currently, two official plugins are available:
+Frontend do **SafeLine**, plataforma de denúncias corporativas destinada ao registro e acompanhamento de manifestações de forma simples, acessível e confidencial.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+A aplicação disponibiliza uma área pública para autenticação e registro de manifestações e uma área autenticada para acompanhamento e gerenciamento dos casos, conforme as permissões definidas pelo backend.
 
-## React Compiler
+> **Importante:** anonimato e confidencialidade dependem também do backend, das políticas da aplicação e da infraestrutura de produção. O frontend, isoladamente, não garante anonimato.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Visão geral
 
-## Expanding the ESLint configuration
+O SafeLine permite que colaboradores registrem manifestações relacionadas a situações como:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Assédio.
+- Fraude.
+- Desvio de conduta.
+- Sugestões e melhorias.
+- Outras ocorrências.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Após o registro, a manifestação recebe um **protocolo único**, utilizado para acompanhamento do caso.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+A aplicação também disponibiliza uma área autenticada para consulta das manifestações e acesso às funcionalidades administrativas autorizadas pelo backend.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Stack
 
-```
+| Tecnologia | Utilização |
+| --- | --- |
+| React 19 | Construção da interface |
+| React DOM | Renderização da aplicação |
+| Vite 8 | Desenvolvimento, HMR e build |
+| TypeScript 6 | Tipagem estática |
+| React Router 7 | Navegação e roteamento SPA |
+| CSS | Estilos, temas e layout responsivo |
+| Lucide React | Ícones da interface |
+| Cloudflare Turnstile | Proteção contra automação e bots |
+| Firebase Hosting | Hospedagem da aplicação |
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Funcionalidades
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Área pública
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Login com validação de formulário.
+- Cadastro de usuários.
+- Criação de manifestações.
+- Seleção de categoria.
+- Validação do Cloudflare Turnstile.
+- Tratamento de erros da API.
+- Exibição do protocolo após o registro.
 
-```
+### Acompanhamento
+
+- Consulta de manifestações por protocolo.
+- Listagem de manifestações vinculadas à sessão autenticada.
+- Exibição de protocolo, assunto, status e data de atualização.
+- Busca por protocolo ou assunto.
+
+### Área autenticada
+
+- Dashboard protegido por autenticação.
+- Controle de acesso conforme permissões definidas pelo backend.
+- Envio do token de sessão utilizando `Authorization: Bearer`.
+- Logout e remoção da sessão local.
+
+## Estrutura do projeto
+
+```text
+src/
+├── components/
+│   ├── common/             # Componentes reutilizáveis
+│   └── ...
+├── pages/
+│   ├── Auth/               # Login, cadastro e layout de autenticação
+│   └── Cases/              # Criação e acompanhamento de manifestações
+├── services/
+│   └── api.ts              # Cliente HTTP e comunicação com a API
+├── types/                  # Tipagens e contratos da aplicação
+├── App.tsx                 # Configuração das rotas
+└── index.css               # Estilos e tokens globais
