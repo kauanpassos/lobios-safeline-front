@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Home, PlusCircle, BookOpen, User, Shield, LogOut } from 'lucide-react';
 
 interface SidebarProps {
@@ -6,6 +7,25 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+  const location = useLocation();
+
+  // Função auxiliar para pintar o menu ativo
+  const getMenuStyles = (path: string) => {
+    const isActive = location.pathname === path;
+    return {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '12px',
+      borderRadius: '8px',
+      textDecoration: 'none',
+      transition: 'background 0.2s',
+      backgroundColor: isActive ? 'rgba(139, 92, 246, 0.1)' : 'transparent',
+      color: isActive ? '#a78bfa' : '#cbd5e1',
+      fontWeight: isActive ? '600' : 'normal',
+    };
+  };
+
   return (
     <aside style={{ 
       width: '260px', 
@@ -31,20 +51,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* Navegação */}
+      {/* Navegação - Usando Link do react-router-dom */}
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
-        <a href="/meus-casos" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', borderRadius: '8px', textDecoration: 'none', fontWeight: '600' }}>
+        <Link to="/meus-casos" style={getMenuStyles('/meus-casos')}>
           <Home size={18} /> Minhas manifestações
-        </a>
-        <a href="/nova-manifestacao" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', color: '#cbd5e1', borderRadius: '8px', textDecoration: 'none', transition: 'background 0.2s' }}>
+        </Link>
+        
+        <Link to="/nova-manifestacao" style={getMenuStyles('/nova-manifestacao')}>
           <PlusCircle size={18} /> Nova manifestação
-        </a>
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', color: '#cbd5e1', borderRadius: '8px', textDecoration: 'none', transition: 'background 0.2s' }}>
+        </Link>
+        
+        <Link to="#" style={getMenuStyles('/orientacoes')}>
           <BookOpen size={18} /> Orientações
-        </a>
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', color: '#cbd5e1', borderRadius: '8px', textDecoration: 'none', transition: 'background 0.2s' }}>
+        </Link>
+        
+        <Link to="#" style={getMenuStyles('/perfil')}>
           <User size={18} /> Meu perfil
-        </a>
+        </Link>
 
         {/* Botão de Sair */}
         <button 

@@ -16,3 +16,12 @@ export interface CaseSummary {
   status: string;
   updatedAt: string; 
 }
+
+export interface MyCaseApiItem {
+  id: string;
+  category: string;
+  content: string;
+  description: string;
+  status: string;
+  createdAt: string;
+}

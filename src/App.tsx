@@ -23,21 +23,22 @@ function App() {
     navigate('/');
   };
 
-  // Rotas Privadas
+  // Rotas Privadas (Usuário Logado)
   if (isAuthenticated) {
     return (
       <DashboardLayout onLogout={handleLogout}>
         <Routes>
           <Route path="/meus-casos" element={<MyCasesPage />} />
           <Route path="/nova-manifestacao" element={<CreateCasePage onBack={() => navigate('/meus-casos')} />} />
-          {/* Se digitar qualquer rota inválida, joga para Meus Casos */}
+          
+          {/* Se digitar qualquer rota inválida enquanto logado, joga para Meus Casos */}
           <Route path="*" element={<Navigate to="/meus-casos" replace />} />
         </Routes>
       </DashboardLayout>
     );
   }
 
-  // Rotas Públicas
+  // Rotas Públicas (Usuário Deslogado)
   return (
     <Routes>
       <Route path="/" element={
@@ -49,6 +50,10 @@ function App() {
           )}
         </AuthLayout>
       } />
+      
+      {/* Se quiser permitir denúncias anônimas sem login, você pode adicionar: */}
+      {/* <Route path="/nova-manifestacao-anonima" element={<CreateCasePage onBack={() => navigate('/')} />} /> */}
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

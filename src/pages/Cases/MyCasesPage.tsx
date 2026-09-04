@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Plus, Search, BookOpen, Shield } from 'lucide-react';
 import { apiFetch } from '../../services/api';
-import type { CaseSummary } from '../../types/case';
+import type { CaseSummary, MyCaseApiItem } from '../../types/case';
 
 export const MyCasesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,9 +15,20 @@ export const MyCasesPage: React.FC = () => {
     const loadCases = async () => {
       try {
         setIsLoading(true);
-        // Faz o GET na rota do backend
-        const data = await apiFetch<CaseSummary[]>('/api/v1/cases');
-        setCases(data);
+        // Usa o endpoint correto que traz apenas os casos do usuário logado
+        const data = await apiFetch<MyCaseApiItem[]>('/api/v1/cases/my');
+        
+        // Mapeia o retorno do backend para o formato que a UI espera
+        const mappedCases: CaseSummary[] = data.map((item) => ({
+          id: item.id,
+          category: item.category || 'Manifestação',
+          protocol: item.id.substring(0, 8).toUpperCase(), // Usa parte do ID como protocolo visual
+          snippet: (item.description || item.content || '').substring(0, 60) + '...',
+          status: item.status || 'Nova',
+          updatedAt: new Date(item.createdAt).toLocaleDateString('pt-BR')
+        }));
+
+        setCases(mappedCases);
       } catch (err: unknown) {
         if (err instanceof Error) {
           setError(err.message);
@@ -40,7 +53,13 @@ export const MyCasesPage: React.FC = () => {
           <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginTop: '4px' }}>Minhas manifestações</h1>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '1rem' }}>Acompanhe o andamento das suas manifestações e responda quando o RH precisar.</p>
         </div>
-        <Button variant="primary" icon={<Plus size={18} />}>Nova manifestação</Button>
+        <Button 
+          variant="primary" 
+          icon={<Plus size={18} />}
+          onClick={() => navigate('/nova-manifestacao')}
+        >
+          Nova manifestação
+        </Button>
       </div>
 
       <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>

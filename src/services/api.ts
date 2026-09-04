@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5016';
+// Retirado o "/api" do final do localhost para evitar duplicação
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5016';
 const TOKEN_STORAGE_KEY = '@SafeLine:token';
 
 export class ApiError extends Error {
@@ -24,6 +25,7 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   try {
+    // Agora o path inteiro (ex: /api/v1/cases) é concatenado à base pura
     const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
       ...options,
       headers,
@@ -41,7 +43,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     }
 
     if (!response.ok) {
-      // Registra o erro real no console para debug, mas não repassa para a UI
       console.error(`[API Error] Status ${response.status}:`, data);
       
       throw new ApiError(
@@ -57,7 +58,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       throw error;
     }
     
-    // Captura falhas puras de rede (fetch failed, CORS, etc)
     console.error('API Network Error:', error);
     throw new Error('Erro de conexão. Verifique sua internet ou tente mais tarde.', { cause: error });
   }
