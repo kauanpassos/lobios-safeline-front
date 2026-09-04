@@ -18,3 +18,15 @@ export interface AuthState {
     role?: 'employee' | 'admin' | 'anonymous';
   } | null;
 }
+
+export interface LoginResponse {
+  token: string;
+}
+
+export const parseLoginResponse = (payload: unknown): LoginResponse => {
+  if (typeof payload !== 'object' || payload === null || !('token' in payload) || typeof payload.token !== 'string') {
+    throw new Error('Invalid authentication response.');
+  }
+
+  return { token: payload.token };
+};

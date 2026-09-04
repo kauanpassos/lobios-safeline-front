@@ -1,6 +1,9 @@
-// Retirado o "/api" do final do localhost para evitar duplicação
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5016';
 const TOKEN_STORAGE_KEY = '@SafeLine:token';
+
+export type ResponseParser<T> = (payload: unknown) => T;
+
+export const parseEmptyResponse: ResponseParser<void> = () => undefined;
 
 export class ApiError extends Error {
   status: number;
@@ -14,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(path: string, options: RequestInit, parseResponse: ResponseParser<T>): Promise<T> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   const headers = new Headers(options.headers);
 
@@ -25,7 +28,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   try {
-    // Agora o path inteiro (ex: /api/v1/cases) é concatenado à base pura
     const response = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`, {
       ...options,
       headers,
@@ -52,7 +54,12 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       );
     }
 
-    return data as T;
+    try {
+      return parseResponse(data);
+    } catch (error: unknown) {
+      console.error('Invalid API response:', error);
+      throw new ApiError('Resposta inválida do servidor.', response.status, null);
+    }
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
