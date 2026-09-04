@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/Auth/RegisterPage';
 import { CreateCasePage } from './pages/Cases/CreateCasePage';
 import { MyCasesPage } from './pages/Cases/MyCasesPage';
 import { DashboardLayout } from './pages/DashboardLayout';
+import { ProfilePage } from './pages/ProfilePage';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -14,7 +15,7 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-    navigate('/meus-casos');
+    navigate('/my-cases');
   };
 
   const handleLogout = () => {
@@ -23,22 +24,23 @@ function App() {
     navigate('/');
   };
 
-  // Rotas Privadas (Usuário Logado)
+  // Rotas Privadas
   if (isAuthenticated) {
     return (
       <DashboardLayout onLogout={handleLogout}>
         <Routes>
-          <Route path="/meus-casos" element={<MyCasesPage />} />
-          <Route path="/nova-manifestacao" element={<CreateCasePage onBack={() => navigate('/meus-casos')} />} />
+          <Route path="/my-cases" element={<MyCasesPage />} />
+          <Route path="/new-report" element={<CreateCasePage onBack={() => navigate('/my-cases')} />} />
+          <Route path="/profile" element={<ProfilePage />} />
           
-          {/* Se digitar qualquer rota inválida enquanto logado, joga para Meus Casos */}
-          <Route path="*" element={<Navigate to="/meus-casos" replace />} />
+          {/* Redireciona rotas autenticadas desconhecidas para a página de denúncias. */}
+          <Route path="*" element={<Navigate to="/my-cases" replace />} />
         </Routes>
       </DashboardLayout>
     );
   }
 
-  // Rotas Públicas (Usuário Deslogado)
+  // Rotas Públicas
   return (
     <Routes>
       <Route path="/" element={
@@ -51,8 +53,7 @@ function App() {
         </AuthLayout>
       } />
       
-      {/* Se quiser permitir denúncias anônimas sem login, você pode adicionar: */}
-      {/* <Route path="/nova-manifestacao-anonima" element={<CreateCasePage onBack={() => navigate('/')} />} /> */}
+      {/* Se quiser permitir denúncias anônimas sem login, você pode adicionar essa rota. */}
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -3,7 +3,7 @@ import { Mail, Lock, UserPlus, CheckCircle2, User, AlertCircle } from 'lucide-re
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import type { RegisterFormData } from '../../types/auth';
-import { apiFetch } from '../../services/api';
+import { apiFetch, parseEmptyResponse } from '../../services/api';
 
 interface RegisterPageProps {
   onSuccess?: () => void;
@@ -57,7 +57,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. BLINDAGEM: Sanitiza os dados
     const sanitizedEmail = formData.email.trim();
     const sanitizedName = formData.name?.trim() ?? '';
     setFormData(prev => ({ ...prev, email: sanitizedEmail, name: sanitizedName }));
@@ -75,7 +74,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
           email: sanitizedEmail,
           password: formData.password
         }),
-      });
+      }, parseEmptyResponse);
 
       setIsSuccess(true);
       
@@ -113,7 +112,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
           Criar nova conta
         </h2>
         <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
-          Cadastre-se para acompanhar suas manifestações no canal SafeLine.
+          Cadastre-se para acompanhar suas denúncias no canal SafeLine.
         </p>
       </div>
 

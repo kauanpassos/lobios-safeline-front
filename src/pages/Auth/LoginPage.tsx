@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Mail, Lock, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
-import type { LoginFormData } from '../../types/auth';
+import { parseLoginResponse, type LoginFormData } from '../../types/auth';
 import { apiFetch } from '../../services/api';
 
 interface LoginPageProps {
@@ -59,25 +59,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setApiError(null);
 
     try {
-      const data = await apiFetch<{ token?: string }>('/auth/login', {
+      const data = await apiFetch('/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           email: sanitizedEmail,
           password: formData.password
         }),
-      });
+      }, parseLoginResponse);
 
-      // Validação estrita do token retornado pelo backend
-      if (data && data.token && typeof data.token === 'string') {
-        localStorage.setItem('@SafeLine:token', data.token);
-        
-        setSuccessMessage('Autenticado com sucesso. Redirecionando...');
-        
-        if (onSuccess) {
-          redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedEmail), 800);
-        }
-      } else {
-        setApiError('Falha na autenticação: Token não recebido ou inválido.');
+      // Validação estrita do token retornado pelo backend.
+      localStorage.setItem('@SafeLine:token', data.token);
+      setSuccessMessage('Autenticado com sucesso. Redirecionando...');
+
+      if (onSuccess) {
+        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedEmail), 800);
       }
       
     } catch (err: unknown) {

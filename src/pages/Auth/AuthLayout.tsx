@@ -55,7 +55,7 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
             opacity: 0.7,
           }}
         >
-          &copy; {new Date().getFullYear()} Lobios Tecnologia.
+          &copy; {new Date().getFullYear()} SafeLine.
         </span>
       </div>
 

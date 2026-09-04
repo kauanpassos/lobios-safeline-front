@@ -6,15 +6,15 @@
 ![Firebase Hosting](https://img.shields.io/badge/Deploy-Firebase%20Hosting-FFCA28?logo=firebase&logoColor=20232A)
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
 
-Frontend do **SafeLine**, plataforma de denúncias corporativas destinada ao registro e acompanhamento de manifestações de forma simples, acessível e confidencial.
+Frontend do **SafeLine**, plataforma de denúncias corporativas destinada ao registro e acompanhamento de denúncias de forma simples, acessível e confidencial.
 
-A aplicação disponibiliza uma área pública para autenticação e registro de manifestações e uma área autenticada para acompanhamento e gerenciamento dos casos, conforme as permissões definidas pelo backend.
+A aplicação disponibiliza uma área pública para autenticação e registro de denúncias e uma área autenticada para acompanhamento e gerenciamento dos casos, conforme as permissões definidas pelo backend.
 
 > **Importante:** anonimato e confidencialidade dependem também do backend, das políticas da aplicação e da infraestrutura de produção. O frontend, isoladamente, não garante anonimato.
 
 ## Visão geral
 
-O SafeLine permite que colaboradores registrem manifestações relacionadas a situações como:
+O SafeLine permite que colaboradores registrem denúncias relacionadas a situações como:
 
 - Assédio.
 - Fraude.
@@ -22,9 +22,9 @@ O SafeLine permite que colaboradores registrem manifestações relacionadas a si
 - Sugestões e melhorias.
 - Outras ocorrências.
 
-Após o registro, a manifestação recebe um **protocolo único**, utilizado para acompanhamento do caso.
+Após o registro, a denúncia recebe um **protocolo único**, utilizado para acompanhamento do caso.
 
-A aplicação também disponibiliza uma área autenticada para consulta das manifestações e acesso às funcionalidades administrativas autorizadas pelo backend.
+A aplicação também disponibiliza uma área autenticada para consulta das denúncias e acesso às funcionalidades administrativas autorizadas pelo backend.
 
 ## Stack
 
@@ -46,7 +46,7 @@ A aplicação também disponibiliza uma área autenticada para consulta das mani
 
 - Login com validação de formulário.
 - Cadastro de usuários.
-- Criação de manifestações.
+- Criação de denúncias.
 - Seleção de categoria.
 - Validação do Cloudflare Turnstile.
 - Tratamento de erros da API.
@@ -54,8 +54,8 @@ A aplicação também disponibiliza uma área autenticada para consulta das mani
 
 ### Acompanhamento
 
-- Consulta de manifestações por protocolo.
-- Listagem de manifestações vinculadas à sessão autenticada.
+- Consulta de denúncias por protocolo.
+- Listagem de denúncias vinculadas à sessão autenticada.
 - Exibição de protocolo, assunto, status e data de atualização.
 - Busca por protocolo ou assunto.
 
@@ -75,7 +75,7 @@ src/
 │   └── ...
 ├── pages/
 │   ├── Auth/               # Login, cadastro e layout de autenticação
-│   └── Cases/              # Criação e acompanhamento de manifestações
+│   └── Cases/              # Criação e acompanhamento de denúncias
 ├── services/
 │   └── api.ts              # Cliente HTTP e comunicação com a API
 ├── types/                  # Tipagens e contratos da aplicação
