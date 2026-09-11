@@ -31,12 +31,12 @@ export const Button = ({
     >
       {isLoading ? (
         <>
-          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+          <Loader2 size={18} className="safeline-btn-loader" />
           <span>Processando...</span>
         </>
       ) : (
         <>
-          {icon && <span aria-hidden="true" style={{ display: 'flex', alignItems: 'center' }}>{icon}</span>}
+          {icon && <span aria-hidden="true" className="safeline-btn-icon">{icon}</span>}
           <span>{children}</span>
         </>
       )}

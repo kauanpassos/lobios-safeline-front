@@ -49,15 +49,15 @@ export const MyCasesPage: React.FC = () => {
           <h1>MINHAS DENÚNCIAS</h1>
           <p>Acompanhe o andamento das suas denúncias e consulte informações adicionais sempre que precisar, em um ambiente seguro e confidencial.</p>
         </div>
-        <Button variant="primary" icon={<Plus size={21} />} onClick={() => navigate('/new-report')} style={{ boxShadow: '0 8px 20px rgba(124, 58, 237, 0.28)', padding: '14px 22px' }}>
+        <Button variant="primary" icon={<Plus size={21} />} onClick={() => navigate('/new-report')} className="cases-new-button">
           Nova denúncia
         </Button>
       </section>
 
       {isLoading ? (
         <div className="cases-loading" aria-busy="true" aria-label="Carregando denúncias">
-          <div className="safeline-skeleton" style={{ height: '58px' }} />
-          <div className="safeline-skeleton" style={{ height: '350px' }} />
+          <div className="safeline-skeleton safeline-skeleton-toolbar" />
+          <div className="safeline-skeleton safeline-skeleton-table" />
         </div>
       ) : (
         <section className="cases-panel">

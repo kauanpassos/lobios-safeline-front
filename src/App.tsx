@@ -52,8 +52,6 @@ function App() {
           )}
         </AuthLayout>
       } />
-      
-      {/* Se quiser permitir denúncias anônimas sem login, você pode adicionar essa rota. */}
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

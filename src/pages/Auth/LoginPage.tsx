@@ -84,35 +84,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      noValidate 
-      style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+    <form onSubmit={handleSubmit} noValidate className="auth-form">
+      <div className="auth-form-header">
+        <h2>
           Acesso Seguro
         </h2>
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+        <p>
           Insira suas credenciais corporativas para acessar o painel de denúncias.
         </p>
       </div>
 
       {apiError && (
         <div role="alert" className="alert alert-error">
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{apiError}</span>
+          <AlertCircle size={20} />
+          <span>{apiError}</span>
         </div>
       )}
 
       {successMessage && (
         <div role="status" className="alert alert-success">
-          <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{successMessage}</span>
+          <CheckCircle2 size={20} />
+          <span>{successMessage}</span>
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div className="auth-fields">
         <Input
           id="login-email"
           type="email"
@@ -128,7 +124,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           required
         />
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="auth-password-field">
           <Input
             id="login-password"
             type="password"
@@ -143,14 +139,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             error={errors.password}
             required
           />
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="auth-forgot-row">
             <a
               href="#forgot-password"
               onClick={(e) => {
                 e.preventDefault();
                 alert('Funcionalidade de recuperação de senha será ativada no próximo passo!');
               }}
-              style={{ fontSize: '0.8rem', color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 600, padding: '0.25rem 0' }}
+              className="auth-forgot-link"
             >
               Esqueci minha senha
             </a>
@@ -164,7 +160,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         fullWidth 
         isLoading={isLoading} 
         icon={<LogIn size={18} />}
-        style={{ marginTop: '0.5rem' }}
+        className="auth-form-button"
       >
         Entrar no Portal
       </Button>

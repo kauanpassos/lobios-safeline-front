@@ -9,84 +9,43 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = ({
-  label,
-  icon,
-  error,
-  helperText,
-  type = 'text',
-  id: customId,
-  className = '',
-  style,
-  ...props
+  label, icon, error, helperText, type = 'text', id: customId, className = '', style, ...props
 }: InputProps) => {
   const generatedId = useId();
   const id = customId || generatedId;
   const errorId = `${id}-error`;
   const helperId = `${id}-helper`;
-  
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', width: '100%', ...style }}>
-      <label htmlFor={id} style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-        {label}
-      </label>
-
+    <div className="safeline-field" style={style}>
+      <label htmlFor={id} className="safeline-field-label">{label}</label>
       <div className="safeline-input-wrapper">
-        {icon && (
-          <div style={{ position: 'absolute', left: '1rem', color: 'var(--color-text-muted)', pointerEvents: 'none', display: 'flex' }}>
-            {icon}
-          </div>
-        )}
-
+        {icon && <div className="safeline-input-icon">{icon}</div>}
         <input
           id={id}
           type={inputType}
-          className={`safeline-input ${className}`}
-          style={{ 
-            paddingLeft: icon ? '2.75rem' : '1rem',
-            paddingRight: isPassword ? '2.75rem' : '1rem'
-          }}
+          className={`safeline-input ${icon ? 'has-icon' : ''} ${isPassword ? 'has-password-toggle' : ''} ${className}`}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
-
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
             aria-pressed={showPassword}
-            style={{
-              position: 'absolute',
-              right: '0.5rem',
-              background: 'transparent',
-              border: 'none',
-              padding: '0.5rem',
-              cursor: 'pointer',
-              color: 'var(--color-text-muted)',
-              display: 'flex',
-            }}
+            className="safeline-password-toggle"
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         )}
       </div>
-
-      {error && (
-        <span id={errorId} role="alert" style={{ fontSize: '0.8rem', color: 'var(--color-error)', fontWeight: 500 }}>
-          {error}
-        </span>
-      )}
-
-      {helperText && !error && (
-        <span id={helperId} style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-          {helperText}
-        </span>
-      )}
+      {error && <span id={errorId} role="alert" className="safeline-field-error">{error}</span>}
+      {helperText && !error && <span id={helperId} className="safeline-field-helper">{helperText}</span>}
     </div>
   );
 };
