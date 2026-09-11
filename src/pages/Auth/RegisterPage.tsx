@@ -91,14 +91,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
 
   if (isSuccess) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', padding: '12px 0' }}>
-        <div style={{ padding: '16px', backgroundColor: 'var(--bg-success-subtle)', borderRadius: '50%', color: 'var(--color-success)', display: 'flex' }}>
+      <div className="auth-success-state">
+        <div className="auth-success-icon">
           <CheckCircle2 size={36} />
         </div>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <h3>
           Conta criada com sucesso!
         </h3>
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', maxWidth: '320px', lineHeight: 1.5 }}>
+        <p>
           Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais corporativas.
         </p>
       </div>
@@ -106,20 +106,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.5rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+    <form onSubmit={handleSubmit} className="auth-form auth-register-form">
+      <div className="auth-form-header">
+        <h2>
           Criar nova conta
         </h2>
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+        <p>
           Cadastre-se para acompanhar suas denúncias no canal SafeLine.
         </p>
       </div>
 
       {apiError && (
         <div role="alert" className="alert alert-error">
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{apiError}</span>
+          <AlertCircle size={20} />
+          <span>{apiError}</span>
         </div>
       )}
 
@@ -179,7 +179,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         required
       />
 
-      <Button type="submit" variant="primary" fullWidth isLoading={isLoading} icon={<UserPlus size={18} />} style={{ marginTop: '0.5rem' }}>
+      <Button type="submit" variant="primary" fullWidth isLoading={isLoading} icon={<UserPlus size={18} />} className="auth-form-button">
         Cadastrar no SafeLine
       </Button>
     </form>

@@ -1,5 +1,75 @@
+export const CASE_STATUSES = [
+  'Recebido',
+  'Em análise',
+  'Em investigação',
+  'Aguardando informações',
+  'Resolvido',
+  'Encerrado',
+] as const;
+
+export type CaseStatus = typeof CASE_STATUSES[number];
+
+export const CASE_PRIORITIES = ['Baixa', 'Média', 'Alta', 'Crítica'] as const;
+export type CasePriority = typeof CASE_PRIORITIES[number];
+
+export const CASE_CATEGORIES = ['Assédio', 'Fraude', 'Conduta', 'Sugestão', 'Outro'] as const;
+export type CaseCategory = typeof CASE_CATEGORIES[number];
+
+export const CASE_CATEGORY_IDS = ['assédio', 'fraude', 'conduta', 'sugestao', 'outro'] as const;
+export type CaseCategoryId = typeof CASE_CATEGORY_IDS[number];
+
+export const isCaseCategoryId = (value: string): value is CaseCategoryId => (
+  CASE_CATEGORY_IDS.includes(value as CaseCategoryId)
+);
+
+const normalizeCategory = (value: string): CaseCategory => {
+  const categories: Record<CaseCategoryId, CaseCategory> = {
+    assédio: 'Assédio',
+    fraude: 'Fraude',
+    conduta: 'Conduta',
+    sugestao: 'Sugestão',
+    outro: 'Outro',
+  };
+
+  if (isCaseCategoryId(value)) {
+    return categories[value];
+  }
+
+  if (CASE_CATEGORIES.includes(value as CaseCategory)) {
+    return value as CaseCategory;
+  }
+
+  throw new Error('Invalid case category.');
+};
+
+const normalizeStatus = (value: string): CaseStatus => {
+  const legacyStatuses: Record<string, CaseStatus> = {
+    Nova: 'Recebido',
+    'Em Análise': 'Em análise',
+    'Concluída': 'Resolvido',
+  };
+
+  if (CASE_STATUSES.includes(value as CaseStatus)) {
+    return value as CaseStatus;
+  }
+
+  if (legacyStatuses[value]) {
+    return legacyStatuses[value];
+  }
+
+  throw new Error('Invalid case status.');
+};
+
+const normalizePriority = (value: string): CasePriority => {
+  if (!CASE_PRIORITIES.includes(value as CasePriority)) {
+    throw new Error('Invalid case priority.');
+  }
+
+  return value as CasePriority;
+};
+
 export interface CreateCasePayload {
-  categoryId: string;
+  categoryId: CaseCategoryId;
   content: string;
   turnstileToken: string;
 }
@@ -11,20 +81,20 @@ export interface CreateCaseResponse {
 export interface CaseSummary {
   id: string;
   protocol: string;
-  category: string; 
-  snippet: string; 
-  status: string;
-  priority: string;
-  updatedAt: string; 
+  category: CaseCategory;
+  snippet: string;
+  status: CaseStatus;
+  priority: CasePriority;
+  updatedAt: string;
 }
 
 export interface MyCaseApiItem {
   id: string;
-  category: string;
+  category: CaseCategory;
   content: string;
   description: string;
-  status: string;
-  priority: string;
+  status: CaseStatus;
+  priority: CasePriority;
   createdAt: string;
 }
 
@@ -55,11 +125,11 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
 
     return {
       id: caseItem.id,
-      category: caseItem.category,
+      category: normalizeCategory(caseItem.category),
       content: caseItem.content,
       description: caseItem.description,
-      status: caseItem.status,
-      priority: caseItem.priority,
+      status: normalizeStatus(caseItem.status),
+      priority: normalizePriority(caseItem.priority),
       createdAt: caseItem.createdAt,
     };
   });

@@ -14,47 +14,16 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
       <div className="auth-brand-panel">
         <Logo size="lg" showSubtitle={false} />
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            flex: 1,
-            width: '100%',
-            maxWidth: '680px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '2.25rem',
-              fontWeight: 700,
-              color: 'var(--color-text-brand)',
-              lineHeight: 1.2,
-              letterSpacing: '-0.02em',
-              marginBottom: '1rem',
-            }}
-          >
+        <div className="auth-brand-content">
+          <h1 className="auth-brand-title">
             Canal de denúncias corporativo.
           </h1>
-          <p
-            style={{
-              color: 'var(--color-text-brand-muted)',
-              fontSize: '1.05rem',
-              lineHeight: 1.6,
-              maxWidth: '680px',
-            }}
-          >
+          <p className="auth-brand-description">
             Um ambiente projetado estruturalmente para garantir a integridade, sigilo e segurança dos seus dados.
           </p>
         </div>
 
-        <span
-          style={{
-            fontSize: '0.75rem',
-            color: 'var(--color-text-brand-muted)',
-            opacity: 0.7,
-          }}
-        >
+        <span className="auth-brand-footer">
           &copy; {new Date().getFullYear()} SafeLine.
         </span>
       </div>
