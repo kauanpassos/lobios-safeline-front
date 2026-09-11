@@ -47,6 +47,7 @@ const normalizeStatus = (value: string): CaseStatus => {
     Nova: 'Recebido',
     'Em Análise': 'Em análise',
     'Concluída': 'Resolvido',
+    Deletar: 'Encerrado', // Mapeamento adicionado para evitar quebra com status legado
   };
 
   if (CASE_STATUSES.includes(value as CaseStatus)) {
@@ -57,7 +58,9 @@ const normalizeStatus = (value: string): CaseStatus => {
     return legacyStatuses[value];
   }
 
-  throw new Error('Invalid case status.');
+  // Fallback seguro em vez de lançar Error, protegendo a listagem
+  console.warn(`[SafeLine] Status desconhecido recebido da API: ${value}. Usando fallback.`);
+  return 'Recebido'; 
 };
 
 const normalizePriority = (value: string): CasePriority => {
@@ -78,6 +81,7 @@ export interface CreateCaseResponse {
   protocol: string;
   message?: string;
 }
+
 export interface CaseSummary {
   id: string;
   protocol: string;
