@@ -6,7 +6,7 @@ import { RegisterPage } from './pages/Auth/RegisterPage';
 import { CreateCasePage } from './pages/Cases/CreateCasePage';
 import { MyCasesPage } from './pages/Cases/MyCasesPage';
 import { DashboardLayout } from './pages/DashboardLayout';
-import { ProfilePage } from './pages/ProfilePage';
+import { ProfilePage } from './pages/Profile/ProfilePage';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -32,8 +32,6 @@ function App() {
           <Route path="/my-cases" element={<MyCasesPage />} />
           <Route path="/new-report" element={<CreateCasePage onBack={() => navigate('/my-cases')} />} />
           <Route path="/profile" element={<ProfilePage />} />
-          
-          {/* Redireciona rotas autenticadas desconhecidas para a página de denúncias. */}
           <Route path="*" element={<Navigate to="/my-cases" replace />} />
         </Routes>
       </DashboardLayout>
