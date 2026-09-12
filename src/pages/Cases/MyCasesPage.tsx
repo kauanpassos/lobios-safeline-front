@@ -21,9 +21,9 @@ export const MyCasesPage: React.FC = () => {
       setCases(data.map((item) => ({
         id: item.id,
         category: item.category || 'Denúncia',
-        protocol: item.id.substring(0, 8).toUpperCase(),
+        protocol: item.protocol || item.id.substring(0, 8).toUpperCase(),
         snippet: (item.description || item.content || '').substring(0, 60) + '...',
-        status: item.status || 'Nova',
+        status: item.status || 'Recebido', // Alinhado com o novo domínio do backend!
         priority: item.priority,
         updatedAt: new Date(item.createdAt).toLocaleDateString('pt-BR'),
       })));
@@ -114,7 +114,15 @@ export const MyCasesPage: React.FC = () => {
                   <span>{item.priority}</span>
                   <span><em>{item.status}</em></span>
                   <span>{item.updatedAt}</span>
-                  <span><button className="row-action" type="button">Ver detalhes</button></span>
+                  <span>
+                    <button 
+                      className="row-action" 
+                      type="button"
+                      onClick={() => navigate(`/my-cases/${item.id}`)}
+                    >
+                      Ver detalhes
+                    </button>
+                  </span>
                 </div>
               ))
             )}

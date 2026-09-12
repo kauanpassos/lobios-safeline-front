@@ -59,7 +59,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setApiError(null);
 
     try {
-      const data = await apiFetch('/auth/login', {
+      // Rota corrigida com o prefixo /api
+      const data = await apiFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           email: sanitizedEmail,
