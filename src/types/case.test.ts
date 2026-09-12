@@ -4,6 +4,7 @@ import { parseMyCaseApiItems, parseCreateCaseResponse } from './case';
 describe('case.ts - Parsers e Normalizadores', () => {
   const mockValidCaseItem = {
     id: '12345',
+    protocol: 'NH3 - YGW',
     category: 'assédio',
     content: 'Conteúdo da denúncia',
     description: 'Descrição breve',
@@ -17,6 +18,7 @@ describe('case.ts - Parsers e Normalizadores', () => {
       const result = parseMyCaseApiItems([mockValidCaseItem]);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('12345');
+      expect(result[0].protocol).toBe('NH3 - YGW');
       expect(result[0].category).toBe('Assédio');
     });
 

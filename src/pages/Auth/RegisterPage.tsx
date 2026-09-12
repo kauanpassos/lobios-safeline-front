@@ -67,7 +67,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     setApiError(null);
 
     try {
-      await apiFetch('/auth/register', {
+      // Rota corrigida com o prefixo /api
+      await apiFetch('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           name: sanitizedName,

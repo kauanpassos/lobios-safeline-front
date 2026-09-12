@@ -94,6 +94,7 @@ export interface CaseSummary {
 
 export interface MyCaseApiItem {
   id: string;
+  protocol: string;
   category: CaseCategory;
   content: string;
   description: string;
@@ -117,6 +118,7 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
     if (
       !isRecord(caseItem) ||
       !isString(caseItem.id) ||
+      !isString(caseItem.protocol) ||
       !isString(caseItem.category) ||
       !isString(caseItem.content) ||
       !isString(caseItem.description) ||
@@ -129,6 +131,7 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
 
     return {
       id: caseItem.id,
+      protocol: caseItem.protocol,
       category: normalizeCategory(caseItem.category),
       content: caseItem.content,
       description: caseItem.description,
