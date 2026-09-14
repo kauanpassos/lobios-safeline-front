@@ -45,8 +45,6 @@ export async function apiFetch<T>(path: string, options: RequestInit, parseRespo
     }
 
     if (!response.ok) {
-      console.error(`[API Error] Status ${response.status}:`, data);
-      
       throw new ApiError(
         'Ocorreu um erro na comunicação com o servidor. Tente novamente mais tarde.',
         response.status,
@@ -56,16 +54,14 @@ export async function apiFetch<T>(path: string, options: RequestInit, parseRespo
 
     try {
       return parseResponse(data);
-    } catch (error: unknown) {
-      console.error('Invalid API response:', error);
+    } catch {
       throw new ApiError('Resposta inválida do servidor.', response.status, null);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof ApiError) {
       throw error;
     }
     
-    console.error('API Network Error:', error);
     throw new Error('Erro de conexão. Verifique sua internet ou tente mais tarde.', { cause: error });
   }
 }

@@ -58,8 +58,6 @@ const normalizeStatus = (value: string): CaseStatus => {
     return legacyStatuses[value];
   }
 
-  // Fallback seguro em vez de lançar Error, protegendo a listagem
-  console.warn(`[SafeLine] Status desconhecido recebido da API: ${value}. Usando fallback.`);
   return 'Recebido'; 
 };
 

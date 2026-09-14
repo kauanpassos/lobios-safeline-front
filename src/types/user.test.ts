@@ -20,7 +20,7 @@ describe('user.ts - Parsers do Usuário', () => {
     });
 
     it('deve lançar erro caso falte uma propriedade obrigatória', () => {
-      const { name, ...userWithoutName } = mockValidUser;
+      const userWithoutName = { ...mockValidUser, name: undefined };
       expect(() => parseUserProfileResponse(userWithoutName)).toThrow('Nome do usuário inválido ou ausente.');
     });
 
@@ -30,10 +30,10 @@ describe('user.ts - Parsers do Usuário', () => {
     });
 
     it('deve processar normalmente mesmo se "department" estiver ausente (é opcional)', () => {
-      const { department, ...userWithoutDept } = mockValidUser;
+      const userWithoutDept = { ...mockValidUser, department: undefined };
       const result = parseUserProfileResponse(userWithoutDept);
       expect(result.department).toBeUndefined();
-      expect(result.id).toBe('user-001'); // O restante continua funcionando
+      expect(result.id).toBe('user-001');
     });
   });
 });

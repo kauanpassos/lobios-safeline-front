@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parseMyCaseApiItems, parseCreateCaseResponse } from './case';
 
 describe('case.ts - Parsers e Normalizadores', () => {
@@ -37,16 +37,10 @@ describe('case.ts - Parsers e Normalizadores', () => {
     });
 
     it('deve usar o fallback "Recebido" para status desconhecidos sem quebrar a lista', () => {
-      // Oculta o console.warn durante este teste para manter o terminal limpo
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
       const payload = [{ ...mockValidCaseItem, status: 'StatusBizarroInexistente' }];
       const result = parseMyCaseApiItems(payload);
       
       expect(result[0].status).toBe('Recebido');
-      expect(consoleSpy).toHaveBeenCalled();
-      
-      consoleSpy.mockRestore();
     });
 
     it('deve lançar erro se o payload não for um array', () => {
