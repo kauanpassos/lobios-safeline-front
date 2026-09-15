@@ -4,6 +4,7 @@ import { AlertCircle, BookOpen, FileSearch, Plus, RefreshCw, Search } from 'luci
 import { Button } from '../../components/ui/Button';
 import { apiFetch } from '../../services/api';
 import { parseMyCaseApiItems, type CaseSummary } from '../../types/case';
+import { CaseDetailsModal } from '../../components/cases/CaseDetailsModal';
 
 const tabs = ['Todas', 'Em andamento', 'Resolvidas', 'Encerradas'];
 
@@ -12,6 +13,9 @@ export const MyCasesPage: React.FC = () => {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 2. Estado para controlar qual denúncia está aberta no Modal
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   const loadCases = useCallback(async () => {
     try {
@@ -115,10 +119,11 @@ export const MyCasesPage: React.FC = () => {
                   <span><em>{item.status}</em></span>
                   <span>{item.updatedAt}</span>
                   <span>
+                    {/* 3. Substituição da navegação pela abertura do Modal */}
                     <button 
                       className="row-action" 
                       type="button"
-                      onClick={() => navigate(`/my-cases/${item.id}`)}
+                      onClick={() => setSelectedCaseId(item.id)}
                     >
                       Ver detalhes
                     </button>
@@ -129,6 +134,13 @@ export const MyCasesPage: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* 4. O componente do Modal renderizado na tela */}
+      <CaseDetailsModal
+        isOpen={!!selectedCaseId}
+        onClose={() => setSelectedCaseId(null)}
+        caseId={selectedCaseId}
+      />
     </div>
   );
 };
