@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle2, Loader2, KeyRound } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { apiFetch, parseEmptyResponse } from '../../services/api';
+import { isNewPasswordAllowed, isStrongPassword } from '../../utils/passwordValidation';
 
 export const ChangePasswordForm: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -22,8 +23,13 @@ export const ChangePasswordForm: React.FC = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('A nova senha deve ter pelo menos 6 caracteres.');
+    if (!isStrongPassword(newPassword)) {
+      setError('A nova senha deve ter 8 ou mais caracteres, incluindo maiúscula, minúscula, número e caractere especial.');
+      return;
+    }
+
+    if (!isNewPasswordAllowed(currentPassword, newPassword)) {
+      setError('A nova senha não pode ser igual à senha atual. Escolha outra senha.');
       return;
     }
 
@@ -39,80 +45,99 @@ export const ChangePasswordForm: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch {
-      setError('Não foi possível alterar a senha. Verifique sua senha atual e tente novamente.');
+    } catch (err: unknown) {
+      setError(err instanceof Error
+        ? err.message
+        : 'Não foi possível alterar a senha. Verifique sua senha atual e tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="glass-card p-6 border-slate-700 fade-in">
-      <div className="flex items-center gap-2 mb-4">
-        <Lock className="text-blue-400" size={24} />
-        <h3 className="text-xl font-bold text-white">Segurança da Conta</h3>
+    <section className="profile-card profile-security fade-in">
+      <div className="profile-section-heading">
+        <div className="profile-section-icon"><Lock size={20} /></div>
+        <div>
+          <h3>Segurança da conta</h3>
+          <p>Atualize sua senha periodicamente para manter o acesso protegido.</p>
+        </div>
       </div>
-      <p className="text-slate-400 mb-6 text-sm">
-        Crie uma senha forte e evite reaproveitar senhas de outros sites.
-      </p>
+      <div className="profile-security-content">
+        <div className="profile-security-intro">
+          <KeyRound size={18} />
+          <span>Crie a senha com 8 ou mais caracteres, incluindo maiúscula, minúscula, número e caractere especial.</span>
+        </div>
+      </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-md mb-4 text-sm">
-          <AlertCircle size={16} />
+        <div className="profile-alert profile-alert-error">
+          <AlertCircle size={18} />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500 text-emerald-400 p-3 rounded-md mb-4 text-sm">
-          <CheckCircle2 size={16} />
+        <div className="profile-alert profile-alert-success">
+          <CheckCircle2 size={18} />
           <span>Senha alterada com sucesso!</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-md">
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-300" htmlFor="currentPassword">Senha Atual</label>
+      <form onSubmit={handleSubmit} className="profile-password-form">
+        <div className="profile-field">
+          <label htmlFor="currentPassword">Senha atual</label>
           <input
             id="currentPassword"
             type="password"
             className="safeline-input"
             value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            onChange={(e) => { setCurrentPassword(e.target.value); setError(null); setSuccess(false); }}
             required
+            placeholder="••••••••"
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-300" htmlFor="newPassword">Nova Senha</label>
+        <div className="profile-field">
+          <label htmlFor="newPassword">Nova senha</label>
           <input
             id="newPassword"
             type="password"
             className="safeline-input"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={(e) => { setNewPassword(e.target.value); setError(null); setSuccess(false); }}
             required
+            minLength={8}
+            placeholder="Ex.: SafeLine@2026"
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-slate-300" htmlFor="confirmPassword">Confirmar Nova Senha</label>
+        <div className="profile-field">
+          <label htmlFor="confirmPassword">Confirmar nova senha</label>
           <input
             id="confirmPassword"
             type="password"
             className="safeline-input"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => { setConfirmPassword(e.target.value); setError(null); setSuccess(false); }}
             required
+            placeholder="Repita a nova senha"
           />
         </div>
 
-        <div className="mt-2">
-          <Button type="submit" variant="primary" disabled={isLoading} className="w-full sm:w-auto">
-            {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Atualizar Senha'}
+        <div className="profile-form-actions">
+          <Button type="submit" variant="primary" disabled={isLoading} className="profile-submit-button">
+            {isLoading ? (
+              <Loader2 className="animate-spin" size={20} />
+            ) : (
+              <>
+                <KeyRound size={18} />
+                Atualizar Senha
+              </>
+            )}
           </Button>
         </div>
       </form>
-    </div>
+    </section>
   );
 };

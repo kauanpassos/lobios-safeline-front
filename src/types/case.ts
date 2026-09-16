@@ -22,7 +22,9 @@ export const isCaseCategoryId = (value: string): value is CaseCategoryId => (
   CASE_CATEGORY_IDS.includes(value as CaseCategoryId)
 );
 
-const normalizeCategory = (value: string): CaseCategory => {
+const normalizeCategory = (value: unknown): CaseCategory => {
+  if (typeof value !== 'string') return 'Outro';
+
   const categories: Record<CaseCategoryId, CaseCategory> = {
     assédio: 'Assédio',
     fraude: 'Fraude',
@@ -39,15 +41,15 @@ const normalizeCategory = (value: string): CaseCategory => {
     return value as CaseCategory;
   }
 
-  throw new Error('Invalid case category.');
+  return 'Outro';
 };
 
 const normalizeStatus = (value: string): CaseStatus => {
   const legacyStatuses: Record<string, CaseStatus> = {
     Nova: 'Recebido',
     'Em Análise': 'Em análise',
-    'Concluída': 'Resolvido',
-    Deletar: 'Encerrado', // Mapeamento adicionado para evitar quebra com status legado
+    Concluída: 'Resolvido',
+    Deletar: 'Encerrado',
   };
 
   if (CASE_STATUSES.includes(value as CaseStatus)) {
@@ -58,15 +60,15 @@ const normalizeStatus = (value: string): CaseStatus => {
     return legacyStatuses[value];
   }
 
-  return 'Recebido'; 
+  return 'Recebido';
 };
 
-const normalizePriority = (value: string): CasePriority => {
-  if (!CASE_PRIORITIES.includes(value as CasePriority)) {
-    throw new Error('Invalid case priority.');
+const normalizePriority = (value: unknown): CasePriority => {
+  if (typeof value === 'string' && (CASE_PRIORITIES as readonly string[]).includes(value)) {
+    return value as CasePriority;
   }
 
-  return value as CasePriority;
+  return 'Média';
 };
 
 export interface CreateCasePayload {
@@ -116,7 +118,6 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
     if (
       !isRecord(caseItem) ||
       !isString(caseItem.id) ||
-      !isString(caseItem.protocol) ||
       !isString(caseItem.category) ||
       !isString(caseItem.content) ||
       !isString(caseItem.description) ||
@@ -129,7 +130,7 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
 
     return {
       id: caseItem.id,
-      protocol: caseItem.protocol,
+      protocol: isString(caseItem.protocol) ? caseItem.protocol : caseItem.id.substring(0, 8).toUpperCase(),
       category: normalizeCategory(caseItem.category),
       content: caseItem.content,
       description: caseItem.description,
