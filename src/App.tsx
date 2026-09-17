@@ -8,6 +8,7 @@ import { MyCasesPage } from './pages/Cases/MyCasesPage';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { ProfilePage } from './pages/Profile/ProfilePage';
 import { CaseDetailsPage } from './pages/Cases/CaseDetailsPage';
+import { CaseChatPage } from './pages/Cases/CaseChatPage';
 import { GuidelinesPage } from './pages/Guidelines/GuidelinesPage';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/guidelines" element={<GuidelinesPage />} />
           <Route path="/orientacoes" element={<GuidelinesPage />} />
+          <Route path="/mensagens" element={<CaseChatPage />} />
           <Route path="*" element={<Navigate to="/my-cases" replace />} />
         </Routes>
       </DashboardLayout>

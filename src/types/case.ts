@@ -73,7 +73,9 @@ const normalizePriority = (value: unknown): CasePriority => {
 
 export interface CreateCasePayload {
   categoryId: CaseCategoryId;
-  content: string;
+  title: string;
+  description: string;
+  priority: CasePriority;
   turnstileToken: string;
 }
 

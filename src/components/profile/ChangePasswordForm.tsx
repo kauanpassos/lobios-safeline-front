@@ -65,7 +65,6 @@ export const ChangePasswordForm: React.FC = () => {
       </div>
       <div className="profile-security-content">
         <div className="profile-security-intro">
-          <KeyRound size={18} />
           <span>Crie a senha com 8 ou mais caracteres, incluindo maiúscula, minúscula, número e caractere especial.</span>
         </div>
       </div>
@@ -131,7 +130,6 @@ export const ChangePasswordForm: React.FC = () => {
               <Loader2 className="animate-spin" size={20} />
             ) : (
               <>
-                <KeyRound size={18} />
                 Atualizar Senha
               </>
             )}

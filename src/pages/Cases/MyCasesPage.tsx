@@ -4,7 +4,6 @@ import { AlertCircle, BookOpen, FileSearch, Plus, RefreshCw, Search } from 'luci
 import { Button } from '../../components/ui/Button';
 import { apiFetch } from '../../services/api';
 import { parseMyCaseApiItems, type CaseSummary } from '../../types/case';
-import { CaseDetailsModal } from '../../components/cases/CaseDetailsModal';
 
 const tabs = ['Todas', 'Em andamento', 'Resolvidas', 'Encerradas'];
 
@@ -13,9 +12,6 @@ export const MyCasesPage: React.FC = () => {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // 2. Estado para controlar qual denúncia está aberta no Modal
-  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
 
   const loadCases = useCallback(async () => {
     try {
@@ -27,9 +23,9 @@ export const MyCasesPage: React.FC = () => {
         category: item.category || 'Denúncia',
         protocol: item.protocol || item.id.substring(0, 8).toUpperCase(),
         snippet: (item.description || item.content || '').substring(0, 60) + '...',
-        status: item.status || 'Recebido', // Alinhado com o novo domínio do backend!
+        status: item.status || 'Recebido', 
         priority: item.priority,
-        updatedAt: new Date(item.createdAt).toLocaleDateString('pt-BR'),
+        updatedAt: new Date(item.createdAt).toLocaleDateString('pt-br'),
       })));
     } catch {
       setError('Não foi possível carregar suas denúncias. Tente novamente.');
@@ -39,11 +35,7 @@ export const MyCasesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void loadCases();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
+    void loadCases();
   }, [loadCases]);
 
   return (
@@ -115,15 +107,14 @@ export const MyCasesPage: React.FC = () => {
                 <div className="case-row" key={item.id} role="row">
                   <span><strong>{item.protocol}</strong><small>{item.snippet}</small></span>
                   <span>{item.category}</span>
-                  <span>{item.priority}</span>
+                  <span>{item.priority || 'Não Classificada'}</span>
                   <span><em>{item.status}</em></span>
                   <span>{item.updatedAt}</span>
                   <span>
-                    {/* 3. Substituição da navegação pela abertura do Modal */}
-                    <button 
-                      className="row-action" 
+                    <button
+                      className="row-action"
                       type="button"
-                      onClick={() => setSelectedCaseId(item.id)}
+                      onClick={() => navigate(`/my-cases/${item.id}`)}
                     >
                       Ver detalhes
                     </button>
@@ -134,13 +125,6 @@ export const MyCasesPage: React.FC = () => {
           </div>
         </section>
       )}
-
-      {/* 4. O componente do Modal renderizado na tela */}
-      <CaseDetailsModal
-        isOpen={!!selectedCaseId}
-        onClose={() => setSelectedCaseId(null)}
-        caseId={selectedCaseId}
-      />
     </div>
   );
 };

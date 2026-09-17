@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, BookOpen, User, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, PlusCircle, BookOpen, User, LogOut, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -21,6 +21,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         </Link>
         <Link className={getMenuClassName('/new-report')} to="/new-report" title="Nova denúncia">
           <PlusCircle size={18} aria-hidden="true" /> {!isCollapsed && 'Nova denúncia'}
+        </Link>
+        <Link className={getMenuClassName('/mensagens')} to="/mensagens" title="Mensagens">
+          <MessageSquare size={18} aria-hidden="true" /> {!isCollapsed && 'Mensagens'}
         </Link>
         <Link className={getMenuClassName('/orientacoes')} to="#" title="Orientações">
           <BookOpen size={18} aria-hidden="true" /> {!isCollapsed && 'Orientações'}

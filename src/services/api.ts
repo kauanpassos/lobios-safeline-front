@@ -17,7 +17,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit, parseResponse: ResponseParser<T>): Promise<T> {
+export interface ApiFetchOptions extends RequestInit {
+  signal?: AbortSignal;
+}
+
+export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseResponse: ResponseParser<T>): Promise<T> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   const headers = new Headers(options.headers);
 
@@ -57,8 +61,11 @@ export async function apiFetch<T>(path: string, options: RequestInit, parseRespo
     } catch {
       throw new ApiError('Resposta inválida do servidor.', response.status, null);
     }
-  } catch (error: unknown) {
+  } catch (error: any) {
     if (error instanceof ApiError) {
+      throw error;
+    }
+    if (error.name === 'AbortError') {
       throw error;
     }
     
