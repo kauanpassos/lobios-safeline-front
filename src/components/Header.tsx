@@ -1,27 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Moon, Shield, Sun, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('safeline-theme') !== 'light');
-  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDarkMode ? 'dark' : 'light';
   }, [isDarkMode]);
-
-  useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
 
   const toggleTheme = () => {
     const nextIsDarkMode = !isDarkMode;
@@ -32,12 +19,12 @@ export const Header: React.FC = () => {
 
   return (
     <header className="dashboard-topbar">
-      <div className="topbar-brand" aria-label="SafeLine">
+      <div className="topbar-brand" aria-label="SafeLine" style={{ marginLeft: 0, paddingLeft: '1rem' }}>
         <Shield size={38} strokeWidth={1.8} />
         <span>SAFELINE</span>
       </div>
 
-      <div className="topbar-actions" ref={menuRef}>
+      <div className="topbar-actions">
         <button
           className="topbar-theme-toggle"
           type="button"
@@ -46,16 +33,15 @@ export const Header: React.FC = () => {
         >
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
-        <button className="topbar-profile" type="button" aria-label="Abrir menu de perfil" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((isOpen) => !isOpen)}>
+  
+        <button 
+          className="topbar-profile" 
+          type="button" 
+          aria-label="Ir para o Meu Perfil" 
+          onClick={() => navigate('/profile')}
+        >
           <UserRound size={22} />
         </button>
-        {isMenuOpen && (
-          <div className="profile-popover" role="menu">
-            <button type="button" role="menuitem" onClick={() => { setIsMenuOpen(false); navigate('/profile'); }}>
-              <UserRound size={17} /> Meu Perfil
-            </button>
-          </div>
-        )}
       </div>
     </header>
   );

@@ -1,35 +1,35 @@
+import shieldLogo from '../../img/safe-line_shield.png';
+
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showSubtitle?: boolean;
 }
 
 export const Logo = ({ size = 'md', showSubtitle = true }: LogoProps) => {
+  // Tamanhos levemente aumentados para compensar o layout vertical
   const iconSizes = {
-    sm: 28,
-    md: 40,
-    lg: 52,
+    sm: 40,
+    md: 60,
+    lg: 80,
   };
 
   return (
-    <div className={`safeline-logo safeline-logo-${size}`}>
-      <div className="safeline-logo-mark">
-
+    <div 
+      className={`safeline-logo safeline-logo-${size}`}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+    >
+      <div 
+        className="safeline-logo-mark"
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
+      >
         <div className="safeline-logo-icon">
-          <svg
+          <img
+            src={shieldLogo}
+            alt="SafeLine Shield"
             width={iconSizes[size]}
             height={iconSizes[size]}
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-
-            <line x1="28" y1="52" x2="68" y2="28" stroke="var(--color-primary-hover)" strokeWidth="6" strokeLinecap="round" />
-            <line x1="28" y1="52" x2="68" y2="76" stroke="var(--color-primary-hover)" strokeWidth="6" strokeLinecap="round" />
-
-            <circle cx="28" cy="52" r="16" fill="white" filter="drop-shadow(0 0 8px rgba(255,255,255,0.8))" />
-            <circle cx="68" cy="28" r="12" fill="white" filter="drop-shadow(0 0 6px rgba(255,255,255,0.7))" />
-            <circle cx="68" cy="76" r="12" fill="white" filter="drop-shadow(0 0 6px rgba(255,255,255,0.7))" />
-          </svg>
+            style={{ objectFit: 'contain' }}
+          />
         </div>
 
         <div className="safeline-logo-name-wrap">
@@ -42,7 +42,10 @@ export const Logo = ({ size = 'md', showSubtitle = true }: LogoProps) => {
       </div>
 
       {showSubtitle && (
-        <span className="safeline-logo-subtitle">
+        <span 
+          className="safeline-logo-subtitle" 
+          style={{ textAlign: 'center', marginTop: '4px' }}
+        >
           Segurança • Tecnologia • Inovação
         </span>
       )}

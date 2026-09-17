@@ -31,22 +31,22 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
     };
   }, []);
 
-  const validate = (): boolean => {
+  const validate = (dataToValidate: RegisterFormData): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
 
-    if (!formData.email) {
+    if (!dataToValidate.email) {
       newErrors.email = 'O e-mail é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(dataToValidate.email)) {
       newErrors.email = 'Insira um e-mail válido';
     }
 
-    if (!formData.password) {
+    if (!dataToValidate.password) {
       newErrors.password = 'A senha é obrigatória';
-    } else if (formData.password.length < 6) {
+    } else if (dataToValidate.password.length < 6) {
       newErrors.password = 'A senha deve conter no mínimo 6 caracteres';
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (dataToValidate.password !== dataToValidate.confirmPassword) {
       newErrors.confirmPassword = 'As senhas não coincidem';
     }
 
@@ -57,23 +57,26 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const sanitizedEmail = formData.email.trim();
-    const sanitizedName = formData.name?.trim() ?? '';
-    setFormData(prev => ({ ...prev, email: sanitizedEmail, name: sanitizedName }));
+    const sanitizedData = {
+      ...formData,
+      email: formData.email.trim(),
+      name: formData.name?.trim() ?? ''
+    };
 
-    if (!validate()) return;
+    setFormData(sanitizedData);
+    
+    if (!validate(sanitizedData)) return;
 
     setIsLoading(true);
     setApiError(null);
 
     try {
-      // Rota corrigida com o prefixo /api
       await apiFetch('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
-          name: sanitizedName,
-          email: sanitizedEmail,
-          password: formData.password
+          name: sanitizedData.name,
+          email: sanitizedData.email,
+          password: sanitizedData.password
         }),
       }, parseEmptyResponse);
 
@@ -96,12 +99,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         <div className="auth-success-icon">
           <CheckCircle2 size={36} />
         </div>
-        <h3>
-          Conta criada com sucesso!
-        </h3>
-        <p>
-          Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais corporativas.
-        </p>
+        <h3>Conta criada com sucesso!</h3>
+        <p>Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais corporativas.</p>
       </div>
     );
   }
@@ -109,12 +108,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="auth-form auth-register-form">
       <div className="auth-form-header">
-        <h2>
-          Criar nova conta
-        </h2>
-        <p>
-          Cadastre-se para acompanhar suas denúncias no canal SafeLine.
-        </p>
+        <h2>Criar nova conta</h2>
+        <p>Cadastre-se para acompanhar suas denúncias no canal SafeLine.</p>
       </div>
 
       {apiError && (
