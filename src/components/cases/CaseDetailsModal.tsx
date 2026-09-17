@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, Clock, FileText, CheckCircle, ShieldAlert, MessageSquare, Send } from 'lucide-react';
+import { X, Clock, FileText, CheckCircle, ShieldAlert, MessageSquare } from 'lucide-react';
 import { apiFetch } from '../../services/api';
 
 interface CaseDetails {
@@ -12,12 +12,7 @@ interface CaseDetails {
   createdAt: string;
 }
 
-interface Message {
-  id: string;
-  senderRole: 'User' | 'Admin';
-  content: string;
-  createdAt: string;
-}
+
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   typeof value === 'object' && value !== null
@@ -42,57 +37,51 @@ const parseCaseDetails = (payload: unknown): CaseDetails => {
   };
 };
 
-const parseMessages = (payload: unknown): Message[] => {
-  if (!Array.isArray(payload)) return [];
 
-  return payload.filter((message): message is Message => (
-    isRecord(message) && isString(message.id) &&
-    (message.senderRole === 'User' || message.senderRole === 'Admin') &&
-    isString(message.content) && isString(message.createdAt)
-  ));
-};
 
 interface CaseDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   caseId: string | null;
+  onOpenChat: (caseId: string) => void;
 }
 
-export function CaseDetailsModal({ isOpen, onClose, caseId }: CaseDetailsModalProps) {
+export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDetailsModalProps) {
   const [caseItem, setCaseItem] = useState<CaseDetails | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const fetchData = async () => {
       if (!caseId) return;
       
       setIsLoading(true);
       setError('');
       setCaseItem(null);
-      setMessages([]);
-      setNewMessage('');
       
       try {
-        const [caseRes, messagesRes] = await Promise.all([
-          apiFetch(`/api/v1/cases/${caseId}`, {}, parseCaseDetails),
-          apiFetch(`/api/v1/cases/${caseId}/messages`, {}, parseMessages).catch(() => [])
-        ]);
-
+        const caseRes = await apiFetch(`/api/v1/cases/${caseId}`, { signal: abortController.signal }, parseCaseDetails);
         setCaseItem(caseRes);
-        setMessages(messagesRes);
-      } catch {
-        setError('Não foi possível carregar os detalhes.');
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setError('Não foi possível carregar os detalhes.');
+        }
       } finally {
-        setIsLoading(false);
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     if (isOpen && caseId) {
       void fetchData();
     }
+
+    return () => {
+      abortController.abort();
+    };
   }, [isOpen, caseId]);
 
   if (!isOpen) return null;
@@ -128,7 +117,7 @@ export function CaseDetailsModal({ isOpen, onClose, caseId }: CaseDetailsModalPr
             </h2>
             {caseItem && (
               <p className="text-sm text-gray-500 mt-1">
-                Registrado em {new Date(caseItem.createdAt).toLocaleDateString('pt-BR')}
+                Registrado em {new Date(caseItem.createdAt).toLocaleDateString('pt-br')}
               </p>
             )}
           </div>
@@ -157,88 +146,33 @@ export function CaseDetailsModal({ isOpen, onClose, caseId }: CaseDetailsModalPr
           ) : error ? (
             <div className="text-center py-12 text-red-500">{error}</div>
           ) : caseItem ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Lado Esquerdo: Relato Original */}
-              <div className="space-y-6">
-                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                  <h3 className="flex items-center text-sm font-bold uppercase tracking-wider text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                    <FileText className="w-4 h-4 mr-2 text-emerald-600" />
-                    Relato Original
-                  </h3>
-                  
-                  <div className="mb-4">
-                    <span className="text-xs font-semibold uppercase text-gray-500">Categoria</span>
-                    <p className="text-gray-800 font-medium">{caseItem.category}</p>
-                  </div>
-
-                  <div>
-                    <span className="text-xs font-semibold uppercase text-gray-500">Descrição</span>
-                    <p className="mt-1 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                      {caseItem.content || caseItem.description}
-                    </p>
-                  </div>
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-semibold uppercase text-gray-500">Categoria</span>
+                  <p className="text-gray-800 font-medium">{caseItem.category}</p>
                 </div>
+                <button
+                  onClick={() => onOpenChat(caseItem.id)}
+                  className="flex items-center justify-center px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium shadow-sm"
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Abrir Chat / Mensagens
+                </button>
               </div>
 
-              {/* Lado Direito: Chat / Histórico */}
-              <div className="flex flex-col h-[500px] border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
-                  <h3 className="flex items-center text-sm font-bold uppercase tracking-wider text-gray-700">
-                    <MessageSquare className="w-4 h-4 mr-2 text-emerald-600" />
-                    Interações com o RH
-                  </h3>
-                </div>
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                <h3 className="flex items-center text-sm font-bold uppercase tracking-wider text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                  <FileText className="w-4 h-4 mr-2 text-emerald-600" />
+                  Relato Original
+                </h3>
                 
-                {/* Área de Mensagens */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
-                  {messages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center text-gray-400 space-y-2">
-                      <MessageSquare className="w-8 h-8 opacity-20" />
-                      <p className="text-sm">Nenhuma mensagem ainda.</p>
-                      <p className="text-xs">O RH enviará atualizações por aqui.</p>
-                    </div>
-                  ) : (
-                    messages.map((msg) => (
-                      <div 
-                        key={msg.id} 
-                        className={`flex flex-col max-w-[85%] ${msg.senderRole === 'User' ? 'ml-auto items-end' : 'mr-auto items-start'}`}
-                      >
-                        <span className="text-xs text-gray-400 mb-1 px-1">
-                          {msg.senderRole === 'User' ? 'Você' : 'Equipe de RH'} • {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <div className={`p-3 rounded-2xl text-sm shadow-sm ${
-                          msg.senderRole === 'User' 
-                            ? 'bg-emerald-600 text-white rounded-tr-none' 
-                            : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200'
-                        }`}>
-                          {msg.content}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Input de Nova Mensagem */}
-                <div className="p-3 bg-white border-t border-gray-100">
-                  <div className="flex items-end gap-2">
-                    <textarea 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Escreva uma mensagem..."
-                      className="flex-1 max-h-32 min-h-[44px] p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"
-                      rows={1}
-                    />
-                    <button 
-                      disabled={!newMessage.trim() || caseItem?.status === 'Concluído'}
-                      className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <Send className="w-5 h-5" />
-                    </button>
-                  </div>
+                <div>
+                  <p className="mt-1 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                    {caseItem.content || caseItem.description}
+                  </p>
                 </div>
               </div>
-
             </div>
           ) : null}
         </div>

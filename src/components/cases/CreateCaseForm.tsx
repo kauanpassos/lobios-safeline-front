@@ -2,17 +2,23 @@ import type { FormEventHandler } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Button } from '../ui/Button';
 import { ArrowLeft } from 'lucide-react';
-import { isCaseCategoryId, type CaseCategoryId } from '../../types/case';
+import { isCaseCategoryId, type CaseCategoryId, type CasePriority } from '../../types/case';
 
 interface CreateCaseFormProps {
-  content: string;
+  title: string;
+  description: string;
   categoryId: CaseCategoryId | '';
+  priority: CasePriority;
+  attachments: File[];
   error: string | null;
   isLoading: boolean;
   turnstileToken: string;
   turnstileSiteKey?: string;
-  onContentChange: (content: string) => void;
+  onTitleChange: (title: string) => void;
+  onDescriptionChange: (description: string) => void;
   onCategoryChange: (categoryId: CaseCategoryId) => void;
+  onPriorityChange: (priority: CasePriority) => void;
+  onAttachmentsChange: (attachments: File[]) => void;
   onTurnstileSuccess: (token: string) => void;
   onTurnstileExpire: () => void;
   onTurnstileError: () => void;
@@ -21,14 +27,19 @@ interface CreateCaseFormProps {
 }
 
 export const CreateCaseForm = ({
-  content,
+  title,
+  description,
   categoryId,
+  priority,
   error,
   isLoading,
   turnstileToken,
   turnstileSiteKey,
-  onContentChange,
+  onTitleChange,
+  onDescriptionChange,
   onCategoryChange,
+  onPriorityChange,
+  onAttachmentsChange,
   onTurnstileSuccess,
   onTurnstileExpire,
   onTurnstileError,
@@ -72,16 +83,45 @@ export const CreateCaseForm = ({
       </div>
 
       <div className="create-case-field">
-        <label htmlFor="case-content">Detalhes do Ocorrido</label>
+        <label htmlFor="case-title">Assunto / Título</label>
+        <input
+          id="case-title"
+          type="text"
+          required
+          maxLength={150}
+          value={title}
+          onChange={(event) => onTitleChange(event.currentTarget.value)}
+          className="create-case-control"
+          placeholder="Ex: Conduta inadequada no setor financeiro..."
+        />
+      </div>
+
+      <div className="create-case-field">
+        <label htmlFor="case-description">Detalhes do Ocorrido</label>
         <textarea
-          id="case-content"
+          id="case-description"
           required
           minLength={10}
-          rows={8}
-          value={content}
-          onChange={(event) => onContentChange(event.currentTarget.value)}
+          rows={6}
+          value={description}
+          onChange={(event) => onDescriptionChange(event.currentTarget.value)}
           className="create-case-control create-case-textarea"
           placeholder="Descreva a situação com o máximo de detalhes possível (onde, quando, quem estava envolvido)..."
+        />
+      </div>
+
+      <div className="create-case-field">
+        <label htmlFor="case-attachments">Anexos / Evidências</label>
+        <input
+          id="case-attachments"
+          type="file"
+          multiple
+          onChange={(event) => {
+            if (event.target.files) {
+              onAttachmentsChange(Array.from(event.target.files));
+            }
+          }}
+          className="create-case-control"
         />
       </div>
 
@@ -92,7 +132,7 @@ export const CreateCaseForm = ({
             onSuccess={onTurnstileSuccess}
             onExpire={onTurnstileExpire}
             onError={onTurnstileError}
-            options={{ language: 'pt-BR', theme: 'dark' }}
+            options={{ language: 'pt-br', theme: 'dark' }}
           />
         ) : (
           <span className="create-case-warning">
