@@ -29,17 +29,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     };
   }, []);
 
-  const validate = (): boolean => {
+  const validate = (dataToValidate: LoginFormData): boolean => {
     const newErrors: Partial<LoginFormData> = {};
-    if (!formData.email) {
+    if (!dataToValidate.email) {
       newErrors.email = 'O e-mail é obrigatório';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(dataToValidate.email)) {
       newErrors.email = 'Formato de e-mail inválido';
     }
 
-    if (!formData.password) {
+    if (!dataToValidate.password) {
       newErrors.password = 'A senha é obrigatória';
-    } else if (formData.password.length < 6) {
+    } else if (dataToValidate.password.length < 6) {
       newErrors.password = 'Mínimo de 6 caracteres requeridos';
     }
 
@@ -50,30 +50,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const sanitizedEmail = formData.email.trim();
-    setFormData(prev => ({ ...prev, email: sanitizedEmail }));
+    const sanitizedData = {
+      ...formData,
+      email: formData.email.trim()
+    };
 
-    if (!validate()) return;
+    setFormData(sanitizedData);
+
+    if (!validate(sanitizedData)) return;
 
     setIsLoading(true);
     setApiError(null);
 
     try {
-      // Rota corrigida com o prefixo /api
       const data = await apiFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
-          email: sanitizedEmail,
-          password: formData.password
+          email: sanitizedData.email,
+          password: sanitizedData.password
         }),
       }, parseLoginResponse);
 
-      // Validação estrita do token retornado pelo backend.
       localStorage.setItem('@SafeLine:token', data.token);
       setSuccessMessage('Autenticado com sucesso. Redirecionando...');
 
       if (onSuccess) {
-        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedEmail), 800);
+        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedData.email), 800);
       }
       
     } catch (err: unknown) {
@@ -87,12 +89,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} noValidate className="auth-form">
       <div className="auth-form-header">
-        <h2>
-          Acesso Seguro
-        </h2>
-        <p>
-          Insira suas credenciais corporativas para acessar o painel de denúncias.
-        </p>
+        <h2>Acesso Seguro</h2>
+        <p>Insira suas credenciais corporativas para acessar o painel de denúncias.</p>
       </div>
 
       {apiError && (

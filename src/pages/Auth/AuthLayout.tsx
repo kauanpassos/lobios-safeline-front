@@ -10,7 +10,6 @@ interface AuthLayoutProps {
 export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps) => {
   return (
     <div className="auth-layout-grid">
-
       <div className="auth-brand-panel">
         <Logo size="lg" showSubtitle={false} />
 
@@ -30,7 +29,6 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
 
       <div className="auth-form-panel">
         <div className="auth-form-container">
-
           <nav aria-label="Opções de acesso" className="auth-segmented-control">
             <button
               type="button"
@@ -51,7 +49,6 @@ export const AuthLayout = ({ children, activeTab, onTabChange }: AuthLayoutProps
           </nav>
           
           {children}
-
         </div>
       </div>
     </div>
