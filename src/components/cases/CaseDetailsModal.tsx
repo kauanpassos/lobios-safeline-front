@@ -4,8 +4,8 @@ import { apiFetch } from '../../services/api';
 
 interface CaseDetails {
   id: string;
-  protocol: string;
   category: string;
+  title: string;
   content: string;
   description?: string;
   status: string;
@@ -28,8 +28,8 @@ const parseCaseDetails = (payload: unknown): CaseDetails => {
 
   return {
     id: payload.id,
-    protocol: isString(payload.protocol) ? payload.protocol : payload.id.substring(0, 8).toUpperCase(),
     category: payload.category,
+    title: isString(payload.title) ? payload.title : '',
     content: payload.content,
     description: isString(payload.description) ? payload.description : undefined,
     status: payload.status,
@@ -113,7 +113,7 @@ export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDe
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
-              Protocolo: {caseItem?.protocol || 'Carregando...'}
+              Denúncia: {caseItem?.title || 'Carregando...'}
             </h2>
             {caseItem && (
               <p className="text-sm text-gray-500 mt-1">

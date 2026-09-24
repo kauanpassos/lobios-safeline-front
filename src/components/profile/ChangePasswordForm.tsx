@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, AlertCircle, CheckCircle2, Loader2, KeyRound } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { apiFetch, parseEmptyResponse } from '../../services/api';
 import { isNewPasswordAllowed, isStrongPassword } from '../../utils/passwordValidation';

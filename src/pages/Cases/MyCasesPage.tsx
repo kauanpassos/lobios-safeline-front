@@ -21,7 +21,7 @@ export const MyCasesPage: React.FC = () => {
       setCases(data.map((item) => ({
         id: item.id,
         category: item.category || 'Denúncia',
-        protocol: item.protocol || item.id.substring(0, 8).toUpperCase(),
+        title: item.title || '',
         snippet: (item.description || item.content || '').substring(0, 60) + '...',
         status: item.status || 'Recebido', 
         priority: item.priority,
@@ -67,7 +67,7 @@ export const MyCasesPage: React.FC = () => {
             </div>
             <label className="case-search">
               <Search size={21} aria-hidden="true" />
-              <input placeholder="Buscar por protocolo ou assunto..." aria-label="Buscar por protocolo ou assunto" />
+              <input placeholder="Buscar por assunto..." aria-label="Buscar por assunto" />
             </label>
           </div>
 
@@ -81,7 +81,7 @@ export const MyCasesPage: React.FC = () => {
 
           <div className="cases-table" role="table" aria-label="Lista de denúncias">
             <div className="cases-table-header" role="row">
-              <span>Protocolo / Assunto</span>
+              <span>Assunto</span>
               <span>Categoria</span>
               <span>Prioridade</span>
               <span>Status</span>
@@ -105,7 +105,7 @@ export const MyCasesPage: React.FC = () => {
             ) : (
               cases.map((item) => (
                 <div className="case-row" key={item.id} role="row">
-                  <span><strong>{item.protocol}</strong><small>{item.snippet}</small></span>
+                  <span><strong>{item.title}</strong><small>{item.snippet}</small></span>
                   <span>{item.category}</span>
                   <span>{item.priority || 'Não Classificada'}</span>
                   <span><em>{item.status}</em></span>

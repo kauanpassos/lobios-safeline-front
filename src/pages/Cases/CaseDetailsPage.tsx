@@ -1,24 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Clock, CheckCircle, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
-const getStatusColor = (status?: string) => {
-  switch (status) {
-    case 'Pendente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'Em Andamento': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'Concluído': return 'bg-green-100 text-green-800 border-green-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
-};
 
-const getStatusIcon = (status?: string) => {
-  switch (status) {
-    case 'Pendente': return <Clock className="w-4 h-4 mr-1" />;
-    case 'Em Andamento': return <ShieldAlert className="w-4 h-4 mr-1" />;
-    case 'Concluído': return <CheckCircle className="w-4 h-4 mr-1" />;
-    default: return null;
-  }
-};
 
 export function CaseDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +23,7 @@ export function CaseDetailsPage() {
           <div>
             <h1 style={{ fontSize: '1.6rem', marginBottom: '4px' }}>Detalhes da Denúncia</h1>
             <p style={{ color: '#B7C9E2', fontSize: '0.9rem' }}>
-              Protocolo: <strong style={{ color: '#F1F5F9', letterSpacing: '0.05em' }}>{id?.substring(0, 8).toUpperCase()}</strong>
+              Identificador: <strong style={{ color: '#F1F5F9', letterSpacing: '0.05em' }}>{id}</strong>
             </p>
           </div>
         </div>
@@ -60,7 +44,6 @@ export function CaseDetailsPage() {
         <p style={{ color: '#B7C9E2', fontSize: '0.95rem' }}>
           Buscando informações do protocolo <strong style={{ color: '#F1F5F9' }}>{id}</strong>…
         </p>
-        {/* TODO: fetch dos dados do caso via apiFetch(`/api/v1/cases/${id}`) */}
       </div>
     </div>
   );

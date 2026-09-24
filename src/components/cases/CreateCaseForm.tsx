@@ -2,13 +2,13 @@ import type { FormEventHandler } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Button } from '../ui/Button';
 import { ArrowLeft } from 'lucide-react';
-import { isCaseCategoryId, type CaseCategoryId, type CasePriority } from '../../types/case';
+import { isCaseCategoryId, type CaseCategoryId } from '../../types/case';
 
 interface CreateCaseFormProps {
   title: string;
   description: string;
   categoryId: CaseCategoryId | '';
-  priority: CasePriority;
+
   attachments: File[];
   error: string | null;
   isLoading: boolean;
@@ -17,7 +17,7 @@ interface CreateCaseFormProps {
   onTitleChange: (title: string) => void;
   onDescriptionChange: (description: string) => void;
   onCategoryChange: (categoryId: CaseCategoryId) => void;
-  onPriorityChange: (priority: CasePriority) => void;
+
   onAttachmentsChange: (attachments: File[]) => void;
   onTurnstileSuccess: (token: string) => void;
   onTurnstileExpire: () => void;
@@ -30,7 +30,7 @@ export const CreateCaseForm = ({
   title,
   description,
   categoryId,
-  priority,
+
   error,
   isLoading,
   turnstileToken,
@@ -38,7 +38,7 @@ export const CreateCaseForm = ({
   onTitleChange,
   onDescriptionChange,
   onCategoryChange,
-  onPriorityChange,
+
   onAttachmentsChange,
   onTurnstileSuccess,
   onTurnstileExpire,
