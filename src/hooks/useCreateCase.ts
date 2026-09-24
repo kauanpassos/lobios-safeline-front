@@ -3,7 +3,6 @@ import { apiFetch } from '../services/api';
 import {
   parseCreateCaseResponse,
   type CaseCategoryId,
-  type CasePriority,
   type CreateCasePayload,
 } from '../types/case';
 
@@ -11,7 +10,6 @@ interface UseCreateCaseResult {
   title: string;
   description: string;
   categoryId: CaseCategoryId | '';
-  priority: CasePriority;
   attachments: File[];
   turnstileToken: string;
   protocol: string | null;
@@ -20,7 +18,6 @@ interface UseCreateCaseResult {
   setTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setCategoryId: (categoryId: CaseCategoryId) => void;
-  setPriority: (priority: CasePriority) => void;
   setAttachments: (attachments: File[]) => void;
   setTurnstileToken: (token: string) => void;
   handleTurnstileError: () => void;
@@ -32,7 +29,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<CaseCategoryId | ''>('');
-  const [priority, setPriority] = useState<CasePriority>('Média');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [protocol, setProtocol] = useState<string | null>(null);
@@ -62,8 +58,7 @@ export const useCreateCase = (): UseCreateCaseResult => {
     setError(null);
 
     try {
-      const payload: CreateCasePayload = { categoryId, title, description, priority, turnstileToken };
-      // TODO: Firebase Storage upload logic for `attachments` will go here
+      const payload: CreateCasePayload = { categoryId, title, description, priority: 'Média', turnstileToken };
       const data = await apiFetch('/api/v1/cases', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -73,7 +68,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
       setTitle('');
       setDescription('');
       setCategoryId('');
-      setPriority('Média');
       setAttachments([]);
       setTurnstileToken('');
     } catch (submissionError: unknown) {
@@ -83,7 +77,7 @@ export const useCreateCase = (): UseCreateCaseResult => {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryId, title, description, priority, attachments, turnstileToken]);
+  }, [categoryId, title, description, attachments, turnstileToken]);
 
   const reset = useCallback(() => {
     setProtocol(null);
@@ -91,7 +85,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
     setTitle('');
     setDescription('');
     setCategoryId('');
-    setPriority('Média');
     setAttachments([]);
     setTurnstileToken('');
   }, []);
@@ -100,7 +93,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
     title,
     description,
     categoryId,
-    priority,
     attachments,
     turnstileToken,
     protocol,
@@ -109,7 +101,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
     setTitle,
     setDescription,
     setCategoryId,
-    setPriority,
     setAttachments,
     setTurnstileToken,
     handleTurnstileError,

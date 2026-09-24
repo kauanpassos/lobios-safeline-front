@@ -86,8 +86,8 @@ export interface CreateCaseResponse {
 
 export interface CaseSummary {
   id: string;
-  protocol: string;
   category: CaseCategory;
+  title: string;
   snippet: string;
   status: CaseStatus;
   priority: CasePriority;
@@ -96,8 +96,8 @@ export interface CaseSummary {
 
 export interface MyCaseApiItem {
   id: string;
-  protocol: string;
   category: CaseCategory;
+  title: string;
   content: string;
   description: string;
   status: CaseStatus;
@@ -121,7 +121,6 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
       !isRecord(caseItem) ||
       !isString(caseItem.id) ||
       !isString(caseItem.category) ||
-      !isString(caseItem.content) ||
       !isString(caseItem.description) ||
       !isString(caseItem.status) ||
       !isString(caseItem.priority) ||
@@ -132,9 +131,9 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
 
     return {
       id: caseItem.id,
-      protocol: isString(caseItem.protocol) ? caseItem.protocol : caseItem.id.substring(0, 8).toUpperCase(),
       category: normalizeCategory(caseItem.category),
-      content: caseItem.content,
+      title: isString(caseItem.title) ? caseItem.title : '',
+      content: isString(caseItem.content) ? caseItem.content : '',
       description: caseItem.description,
       status: normalizeStatus(caseItem.status),
       priority: normalizePriority(caseItem.priority),

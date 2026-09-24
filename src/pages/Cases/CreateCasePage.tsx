@@ -24,7 +24,7 @@ export const CreateCasePage = ({ onBack }: CreateCasePageProps) => {
           title={createCase.title}
           description={createCase.description}
           categoryId={createCase.categoryId}
-          priority={createCase.priority}
+
           attachments={createCase.attachments}
           error={createCase.error}
           isLoading={createCase.isLoading}
@@ -33,7 +33,7 @@ export const CreateCasePage = ({ onBack }: CreateCasePageProps) => {
           onTitleChange={createCase.setTitle}
           onDescriptionChange={createCase.setDescription}
           onCategoryChange={createCase.setCategoryId}
-          onPriorityChange={createCase.setPriority}
+
           onAttachmentsChange={createCase.setAttachments}
           onTurnstileSuccess={createCase.setTurnstileToken}
           onTurnstileExpire={() => createCase.setTurnstileToken('')}
