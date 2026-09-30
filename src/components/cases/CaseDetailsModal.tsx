@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
 import { X, Clock, FileText, CheckCircle, ShieldAlert, MessageSquare } from 'lucide-react';
 import { apiFetch } from '../../services/api';
+import type { CaseStatus } from '../../types/case';
 
 interface CaseDetails {
   id: string;
   category: string;
   title: string;
-  content: string;
-  description?: string;
-  status: string;
+  description: string;
+  status: CaseStatus;
   createdAt: string;
 }
-
-
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   typeof value === 'object' && value !== null
@@ -21,8 +19,14 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
 const isString = (value: unknown): value is string => typeof value === 'string';
 
 const parseCaseDetails = (payload: unknown): CaseDetails => {
-  if (!isRecord(payload) || !isString(payload.id) || !isString(payload.category) ||
-      !isString(payload.content) || !isString(payload.status) || !isString(payload.createdAt)) {
+  if (
+    !isRecord(payload) ||
+    !isString(payload.id) ||
+    !isString(payload.category) ||
+    !isString(payload.description) ||
+    !isString(payload.status) ||
+    !isString(payload.createdAt)
+  ) {
     throw new Error('Invalid case details response.');
   }
 
@@ -30,14 +34,11 @@ const parseCaseDetails = (payload: unknown): CaseDetails => {
     id: payload.id,
     category: payload.category,
     title: isString(payload.title) ? payload.title : '',
-    content: payload.content,
-    description: isString(payload.description) ? payload.description : undefined,
-    status: payload.status,
+    description: payload.description,
+    status: payload.status as CaseStatus,
     createdAt: payload.createdAt,
   };
 };
-
-
 
 interface CaseDetailsModalProps {
   isOpen: boolean;
@@ -64,9 +65,11 @@ export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDe
       try {
         const caseRes = await apiFetch(`/api/v1/cases/${caseId}`, { signal: abortController.signal }, parseCaseDetails);
         setCaseItem(caseRes);
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== 'AbortError') {
           setError('Não foi possível carregar os detalhes.');
+        } else if (!(err instanceof Error)) {
+           setError('Não foi possível carregar os detalhes.');
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -86,30 +89,43 @@ export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDe
 
   if (!isOpen) return null;
 
-  const getStatusColor = (status?: string) => {
+  const getStatusColor = (status?: CaseStatus) => {
     switch (status) {
-      case 'Pendente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Em Andamento': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Concluído': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Recebido':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'Em análise':
+      case 'Em investigação':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Aguardando informações':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Resolvido':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'Encerrado':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getStatusIcon = (status?: string) => {
+  const getStatusIcon = (status?: CaseStatus) => {
     switch (status) {
-      case 'Pendente': return <Clock className="w-4 h-4 mr-1" />;
-      case 'Em Andamento': return <ShieldAlert className="w-4 h-4 mr-1" />;
-      case 'Concluído': return <CheckCircle className="w-4 h-4 mr-1" />;
-      default: return null;
+      case 'Recebido':
+      case 'Aguardando informações':
+        return <Clock className="w-4 h-4 mr-1" />;
+      case 'Em análise':
+      case 'Em investigação':
+        return <ShieldAlert className="w-4 h-4 mr-1" />;
+      case 'Resolvido':
+      case 'Encerrado':
+        return <CheckCircle className="w-4 h-4 mr-1" />;
+      default:
+        return null;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      {/* Container do Modal */}
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
-        {/* Cabeçalho */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
@@ -137,7 +153,6 @@ export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDe
           </div>
         </div>
 
-        {/* Corpo do Modal (Scrollável) */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -169,7 +184,7 @@ export function CaseDetailsModal({ isOpen, onClose, caseId, onOpenChat }: CaseDe
                 
                 <div>
                   <p className="mt-1 text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                    {caseItem.content || caseItem.description}
+                    {caseItem.description}
                   </p>
                 </div>
               </div>

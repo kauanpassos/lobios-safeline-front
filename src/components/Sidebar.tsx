@@ -25,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
         <Link className={getMenuClassName('/mensagens')} to="/mensagens" title="Mensagens">
           <MessageSquare size={18} aria-hidden="true" /> {!isCollapsed && 'Mensagens'}
         </Link>
-        <Link className={getMenuClassName('/orientacoes')} to="#" title="Orientações">
+        <Link className={getMenuClassName('/orientacoes')} to="/orientacoes" title="Orientações">
           <BookOpen size={18} aria-hidden="true" /> {!isCollapsed && 'Orientações'}
         </Link>
         <Link className={getMenuClassName('/profile')} to="/profile" title="Meu perfil">

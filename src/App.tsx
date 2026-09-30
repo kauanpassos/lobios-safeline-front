@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthLayout } from './pages/Auth/AuthLayout';
 import { LoginPage } from './pages/Auth/LoginPage';
@@ -15,6 +15,16 @@ function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('@SafeLine:token'));
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+      navigate('/');
+    };
+
+    window.addEventListener('safeline:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('safeline:unauthorized', handleUnauthorized);
+  }, [navigate]);
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);

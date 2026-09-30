@@ -22,7 +22,7 @@ export const isCaseCategoryId = (value: string): value is CaseCategoryId => (
   CASE_CATEGORY_IDS.includes(value as CaseCategoryId)
 );
 
-const normalizeCategory = (value: unknown): CaseCategory => {
+export const normalizeCategory = (value: unknown): CaseCategory => {
   if (typeof value !== 'string') return 'Outro';
 
   const categories: Record<CaseCategoryId, CaseCategory> = {
@@ -44,7 +44,7 @@ const normalizeCategory = (value: unknown): CaseCategory => {
   return 'Outro';
 };
 
-const normalizeStatus = (value: string): CaseStatus => {
+export const normalizeStatus = (value: string): CaseStatus => {
   const legacyStatuses: Record<string, CaseStatus> = {
     Nova: 'Recebido',
     'Em Análise': 'Em análise',
@@ -63,7 +63,7 @@ const normalizeStatus = (value: string): CaseStatus => {
   return 'Recebido';
 };
 
-const normalizePriority = (value: unknown): CasePriority => {
+export const normalizePriority = (value: unknown): CasePriority => {
   if (typeof value === 'string' && (CASE_PRIORITIES as readonly string[]).includes(value)) {
     return value as CasePriority;
   }
@@ -88,7 +88,7 @@ export interface CaseSummary {
   id: string;
   category: CaseCategory;
   title: string;
-  snippet: string;
+  description: string;
   status: CaseStatus;
   priority: CasePriority;
   updatedAt: string;
@@ -97,12 +97,33 @@ export interface CaseSummary {
 export interface MyCaseApiItem {
   id: string;
   category: CaseCategory;
+  title?: string;
+  description?: string;
+  status: CaseStatus;
+  priority: CasePriority;
+  createdAt: string;
+}
+
+export interface CaseDetails {
+  id: string;
+  category: CaseCategory;
   title: string;
-  content: string;
   description: string;
   status: CaseStatus;
   priority: CasePriority;
   createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CaseMessage {
+  id: string;
+  caseId: string;
+  senderUserId: string;
+  senderRole: string;
+  senderType: string;
+  content: string;
+  createdAt: string;
+  sentAt?: string;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
@@ -113,7 +134,7 @@ const isString = (value: unknown): value is string => typeof value === 'string';
 
 export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   if (!Array.isArray(payload)) {
-    throw new Error('Invalid cases response.');
+    throw new Error('Resposta de denúncias inválida.');
   }
 
   return payload.map((caseItem) => {
@@ -121,20 +142,18 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
       !isRecord(caseItem) ||
       !isString(caseItem.id) ||
       !isString(caseItem.category) ||
-      !isString(caseItem.description) ||
       !isString(caseItem.status) ||
       !isString(caseItem.priority) ||
       !isString(caseItem.createdAt)
     ) {
-      throw new Error('Invalid case item response.');
+      throw new Error('Item de denúncia com formato inválido.');
     }
 
     return {
       id: caseItem.id,
       category: normalizeCategory(caseItem.category),
-      title: isString(caseItem.title) ? caseItem.title : '',
-      content: isString(caseItem.content) ? caseItem.content : '',
-      description: caseItem.description,
+      title: isString(caseItem.title) ? caseItem.title : undefined,
+      description: isString(caseItem.description) ? caseItem.description : undefined,
       status: normalizeStatus(caseItem.status),
       priority: normalizePriority(caseItem.priority),
       createdAt: caseItem.createdAt,
@@ -142,9 +161,26 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   });
 };
 
+export const parseCaseDetailsResponse = (payload: unknown): CaseDetails => {
+  if (!isRecord(payload) || !isString(payload.id)) {
+    throw new Error('Resposta de detalhes da denúncia inválida.');
+  }
+
+  return {
+    id: payload.id,
+    category: normalizeCategory(payload.category ?? payload.categoryId),
+    title: isString(payload.title) ? payload.title : (isString(payload.content) ? payload.content : 'Denúncia sem título'),
+    description: isString(payload.description) ? payload.description : (isString(payload.content) ? payload.content : ''),
+    status: normalizeStatus(isString(payload.status) ? payload.status : 'Recebido'),
+    priority: normalizePriority(payload.priority),
+    createdAt: isString(payload.createdAt) ? payload.createdAt : new Date().toISOString(),
+    updatedAt: isString(payload.updatedAt) ? payload.updatedAt : undefined,
+  };
+};
+
 export const parseCreateCaseResponse = (payload: unknown): CreateCaseResponse => {
   if (!isRecord(payload) || !isString(payload.protocol)) {
-    throw new Error('Invalid case creation response.');
+    throw new Error('Resposta de criação de denúncia inválida.');
   }
 
   return {
