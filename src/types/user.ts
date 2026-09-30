@@ -1,4 +1,4 @@
-export type UserRole = 'Administrador' | 'Analista de Compliance' | 'Investigador' | 'Colaborador';
+export type UserRole = 'Admin' | 'User' | 'HR';
 
 export interface UserProfile {
   id: string;
@@ -10,17 +10,11 @@ export interface UserProfile {
 }
 
 const normalizeRole = (value: unknown): UserRole => {
-  if (value === 'Administrador' || value === 'Analista de Compliance' || value === 'Investigador' || value === 'Colaborador') {
+  if (value === 'Admin' || value === 'HR') {
     return value;
   }
-  if (typeof value === 'string') {
-    const lower = value.toLowerCase();
-    if (lower.includes('admin')) return 'Administrador';
-    if (lower.includes('invest')) return 'Investigador';
-    if (lower.includes('analista')) return 'Analista de Compliance';
-  }
-
-  throw new Error(`Role do usuário inválido: ${String(value)}`);
+  
+  return 'User';
 };
 
 export const parseUserProfileResponse = (data: unknown): UserProfile => {

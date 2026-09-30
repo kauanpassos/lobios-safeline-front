@@ -25,7 +25,9 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   const headers = new Headers(options.headers);
 
-  headers.set('Content-Type', 'application/json');
+  if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -49,10 +51,23 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        const wasAuthenticated = !!localStorage.getItem(TOKEN_STORAGE_KEY);
+        if (wasAuthenticated) {
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+          window.dispatchEvent(new Event('safeline:unauthorized'));
+        }
+        throw new ApiError('Sua sessão expirou. Por favor, faça login novamente.', response.status, data);
+      }
+
+      if (response.status === 403) {
+        throw new ApiError('Acesso negado. Você não tem permissão para visualizar este recurso.', response.status, data);
+      }
+
       throw new ApiError(
         'Ocorreu um erro na comunicação com o servidor. Tente novamente mais tarde.',
         response.status,
-        null
+        data
       );
     }
 
@@ -61,11 +76,11 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
     } catch {
       throw new ApiError('Resposta inválida do servidor.', response.status, null);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof ApiError) {
       throw error;
     }
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       throw error;
     }
     

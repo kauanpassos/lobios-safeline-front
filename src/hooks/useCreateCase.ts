@@ -37,8 +37,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
 
   const handleTurnstileError = useCallback(() => {
     setTurnstileToken('');
-    // Silently clear the token — no UI error on mount.
-    // If the user tries to submit without a token, handleSubmit already blocks and shows the message.
   }, []);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(async (event) => {
@@ -46,6 +44,11 @@ export const useCreateCase = (): UseCreateCaseResult => {
 
     if (!categoryId) {
       setError('Selecione uma categoria antes de enviar.');
+      return;
+    }
+
+    if (!title.trim() || !description.trim()) {
+      setError('Preencha o título e a descrição da denúncia.');
       return;
     }
 
@@ -58,7 +61,14 @@ export const useCreateCase = (): UseCreateCaseResult => {
     setError(null);
 
     try {
-      const payload: CreateCasePayload = { categoryId, title, description, priority: 'Média', turnstileToken };
+      const payload: CreateCasePayload = {
+        categoryId,
+        title: title.trim(),
+        description: description.trim(),
+        priority: 'Média',
+        turnstileToken,
+      };
+
       const data = await apiFetch('/api/v1/cases', {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -77,7 +87,7 @@ export const useCreateCase = (): UseCreateCaseResult => {
     } finally {
       setIsLoading(false);
     }
-  }, [categoryId, title, description, attachments, turnstileToken]);
+  }, [categoryId, title, description, turnstileToken]);
 
   const reset = useCallback(() => {
     setProtocol(null);

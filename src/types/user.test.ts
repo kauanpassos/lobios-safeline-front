@@ -6,7 +6,7 @@ describe('user.ts - Parsers do Usuário', () => {
     id: 'user-001',
     name: 'João Silva',
     email: 'joao@empresa.com',
-    role: 'Investigador',
+    role: 'HR',
     department: 'Recursos Humanos',
     joinedAt: '2023-01-15T00:00:00Z'
   };
@@ -15,7 +15,7 @@ describe('user.ts - Parsers do Usuário', () => {
     it('deve retornar o perfil de usuário corretamente para dados válidos', () => {
       const result = parseUserProfileResponse(mockValidUser);
       expect(result.id).toBe('user-001');
-      expect(result.role).toBe('Investigador');
+      expect(result.role).toBe('HR');
       expect(result.department).toBe('Recursos Humanos');
     });
 
@@ -24,9 +24,10 @@ describe('user.ts - Parsers do Usuário', () => {
       expect(() => parseUserProfileResponse(userWithoutName)).toThrow('Nome do usuário inválido ou ausente.');
     });
 
-    it('deve lançar erro caso o "role" (cargo) seja inválido', () => {
+    it('deve retornar User para role não mapeada', () => {
       const userWithInvalidRole = { ...mockValidUser, role: 'Hacker Supremo' };
-      expect(() => parseUserProfileResponse(userWithInvalidRole)).toThrow(/Role do usuário inválido/);
+      const result = parseUserProfileResponse(userWithInvalidRole);
+      expect(result.role).toBe('User');
     });
 
     it('deve processar normalmente mesmo se "department" estiver ausente (é opcional)', () => {
