@@ -134,29 +134,27 @@ const isString = (value: unknown): value is string => typeof value === 'string';
 
 export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   if (!Array.isArray(payload)) {
-    throw new Error('Resposta de denúncias inválida.');
+    return [];
   }
 
   return payload.map((caseItem) => {
-    if (
-      !isRecord(caseItem) ||
-      !isString(caseItem.id) ||
-      !isString(caseItem.category) ||
-      !isString(caseItem.status) ||
-      !isString(caseItem.priority) ||
-      !isString(caseItem.createdAt)
-    ) {
-      throw new Error('Item de denúncia com formato inválido.');
-    }
+    const record = isRecord(caseItem) ? caseItem : {};
+    const id = isString(record.id) ? record.id : String(Math.random());
+    const category = normalizeCategory(record.category || record.categoryId);
+    const status = normalizeStatus(isString(record.status) ? record.status : 'Recebido');
+    const priority = normalizePriority(record.priority);
+    const createdAt = isString(record.createdAt) ? record.createdAt : new Date().toISOString();
+    const title = isString(record.title) ? record.title : (isString(record.description) ? record.description : 'Denúncia sem título');
+    const description = isString(record.description) ? record.description : (isString(record.content) ? record.content : 'Sem descrição.');
 
     return {
-      id: caseItem.id,
-      category: normalizeCategory(caseItem.category),
-      title: isString(caseItem.title) ? caseItem.title : undefined,
-      description: isString(caseItem.description) ? caseItem.description : undefined,
-      status: normalizeStatus(caseItem.status),
-      priority: normalizePriority(caseItem.priority),
-      createdAt: caseItem.createdAt,
+      id,
+      category,
+      title,
+      description,
+      status,
+      priority,
+      createdAt,
     };
   });
 };
@@ -188,3 +186,76 @@ export const parseCreateCaseResponse = (payload: unknown): CreateCaseResponse =>
     message: isString(payload.message) ? payload.message : undefined,
   };
 };
+
+export interface AdminCaseItem {
+  id: string;
+  categoryId: string;
+  category: CaseCategory;
+  title?: string;
+  description?: string;
+  content: string;
+  status: CaseStatus;
+  createdAtWindow?: string;
+  createdAt?: string;
+  priority: CasePriority;
+  assignedUserId?: string;
+  assignedUserName?: string;
+}
+
+export interface CaseMessageItem {
+  id: string;
+  caseId: string;
+  senderId: string;
+  senderName?: string;
+  content: string;
+  isFromAdmin: boolean;
+  createdAt: string;
+}
+
+export interface CaseAttachmentItem {
+  id: string;
+  caseId: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize?: number;
+  contentType?: string;
+  createdAt: string;
+}
+
+export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload.map((item) => {
+    const rawCategory = isRecord(item) && isString(item.categoryId) ? item.categoryId : 'outro';
+    const rawStatus = isRecord(item) && isString(item.status) ? item.status : 'Recebido';
+    const rawTitle = isRecord(item) && isString(item.title) ? item.title : undefined;
+    const rawDescription = isRecord(item) && isString(item.description) ? item.description : undefined;
+    const rawContent = isRecord(item) && isString(item.content) 
+      ? item.content 
+      : (rawDescription || rawTitle || 'Ocorrência registrada no canal SafeLine.');
+    const rawId = isRecord(item) && isString(item.id) ? item.id : String(Math.random());
+    const rawCreatedAtWindow = isRecord(item) && isString(item.createdAtWindow) ? item.createdAtWindow : undefined;
+    const rawCreatedAt = isRecord(item) && isString(item.createdAt) ? item.createdAt : undefined;
+    const rawPriority = isRecord(item) && isString(item.priority) ? normalizePriority(item.priority) : 'Média';
+    const rawAssignedUserId = isRecord(item) && isString(item.assignedUserId) ? item.assignedUserId : undefined;
+    const rawAssignedUserName = isRecord(item) && isString(item.assignedUserName) ? item.assignedUserName : undefined;
+
+    return {
+      id: rawId,
+      categoryId: rawCategory,
+      category: normalizeCategory(rawCategory),
+      title: rawTitle,
+      description: rawDescription || rawContent,
+      content: rawContent,
+      status: normalizeStatus(rawStatus),
+      createdAtWindow: rawCreatedAtWindow,
+      createdAt: rawCreatedAt,
+      priority: rawPriority,
+      assignedUserId: rawAssignedUserId,
+      assignedUserName: rawAssignedUserName,
+    };
+  });
+};
+

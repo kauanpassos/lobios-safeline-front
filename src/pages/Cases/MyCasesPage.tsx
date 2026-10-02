@@ -31,6 +31,12 @@ export const MyCasesPage: React.FC = () => {
         const data = await apiFetch('/api/v1/cases/my', {}, parseMyCaseApiItems);
         if (!isMounted) return;
 
+        const formatDate = (dateStr?: string) => {
+          if (!dateStr) return 'Recente';
+          const d = new Date(dateStr);
+          return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('pt-BR');
+        };
+
         setCases(data.map((item) => ({
           id: item.id,
           category: item.category || 'Outro',
@@ -38,7 +44,7 @@ export const MyCasesPage: React.FC = () => {
           description: item.description || 'Detalhes protegidos. Clique para visualizar.',
           status: item.status || 'Recebido',
           priority: item.priority || 'Média',
-          updatedAt: new Date(item.createdAt).toLocaleDateString('pt-BR'),
+          updatedAt: formatDate(item.createdAt),
         })));
       } catch (err: unknown) {
         if (!isMounted) return;

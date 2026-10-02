@@ -6,7 +6,7 @@ import { parseLoginResponse, type LoginFormData } from '../../types/auth';
 import { apiFetch } from '../../services/api';
 
 interface LoginPageProps {
-  onSuccess?: (email: string) => void;
+  onSuccess?: (email?: string, role?: string) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
@@ -72,10 +72,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       }, parseLoginResponse);
 
       localStorage.setItem('@SafeLine:token', data.token);
+      if (data.role) localStorage.setItem('@SafeLine:role', data.role);
+      if (data.email) localStorage.setItem('@SafeLine:email', data.email);
       setSuccessMessage('Autenticado com sucesso. Redirecionando...');
 
       if (onSuccess) {
-        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(sanitizedData.email), 800);
+        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(data.email || sanitizedData.email, data.role), 800);
       }
       
     } catch (err: unknown) {

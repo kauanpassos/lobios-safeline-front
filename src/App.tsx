@@ -10,6 +10,8 @@ import { ProfilePage } from './pages/Profile/ProfilePage';
 import { CaseDetailsPage } from './pages/Cases/CaseDetailsPage';
 import { CaseChatPage } from './pages/Cases/CaseChatPage';
 import { GuidelinesPage } from './pages/Guidelines/GuidelinesPage';
+import { RhCasesListPage } from './pages/RH/RhCasesListPage';
+import { RhCaseDetailsPage } from './pages/RH/RhCaseDetailsPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -26,30 +28,49 @@ function App() {
     return () => window.removeEventListener('safeline:unauthorized', handleUnauthorized);
   }, [navigate]);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (_email?: string, role?: string) => {
     setIsAuthenticated(true);
-    navigate('/my-cases');
+    const userRole = role || localStorage.getItem('@SafeLine:role');
+    const userEmail = localStorage.getItem('@SafeLine:email') || _email || '';
+    const isAdmin = userRole === 'Admin' || userRole === 'HR' || userEmail.startsWith('rh@') || userEmail.startsWith('admin@') || userEmail.includes('adm');
+
+    if (isAdmin) {
+      navigate('/rh/cases');
+    } else {
+      navigate('/my-cases');
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('@SafeLine:token');
+    localStorage.removeItem('@SafeLine:role');
+    localStorage.removeItem('@SafeLine:email');
     setIsAuthenticated(false);
     navigate('/');
   };
 
   // Rotas Privadas (Colaborador / RH)
   if (isAuthenticated) {
+    const role = localStorage.getItem('@SafeLine:role');
+    const email = localStorage.getItem('@SafeLine:email') || '';
+    const isAdmin = role === 'Admin' || role === 'HR' || email.startsWith('rh@') || email.startsWith('admin@') || email.includes('adm');
+    const defaultRedirect = isAdmin ? '/rh/cases' : '/my-cases';
+
     return (
       <DashboardLayout onLogout={handleLogout}>
         <Routes>
+          <Route path="/rh/cases" element={<RhCasesListPage />} />
+          <Route path="/rh/casos" element={<RhCasesListPage />} />
+          <Route path="/rh/cases/:id" element={<RhCaseDetailsPage />} />
+          <Route path="/rh/casos/:id" element={<RhCaseDetailsPage />} />
           <Route path="/my-cases" element={<MyCasesPage />} />
           <Route path="/my-cases/:id" element={<CaseDetailsPage />} /> 
-          <Route path="/new-report" element={<CreateCasePage onBack={() => navigate('/my-cases')} />} />
+          <Route path="/new-report" element={<CreateCasePage onBack={() => navigate(defaultRedirect)} />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/guidelines" element={<GuidelinesPage />} />
           <Route path="/orientacoes" element={<GuidelinesPage />} />
           <Route path="/mensagens" element={<CaseChatPage />} />
-          <Route path="*" element={<Navigate to="/my-cases" replace />} />
+          <Route path="*" element={<Navigate to={defaultRedirect} replace />} />
         </Routes>
       </DashboardLayout>
     );
@@ -74,3 +95,4 @@ function App() {
 }
 
 export default App;
+
