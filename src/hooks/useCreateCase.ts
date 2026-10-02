@@ -52,11 +52,6 @@ export const useCreateCase = (): UseCreateCaseResult => {
       return;
     }
 
-    if (!turnstileToken) {
-      setError('Por favor, valide o sistema anti-bot (Turnstile) antes de enviar.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
@@ -85,6 +80,7 @@ export const useCreateCase = (): UseCreateCaseResult => {
         ? submissionError.message
         : 'Ocorreu um erro desconhecido ao registrar o caso.');
     } finally {
+      setTurnstileToken('');
       setIsLoading(false);
     }
   }, [categoryId, title, description, turnstileToken]);
