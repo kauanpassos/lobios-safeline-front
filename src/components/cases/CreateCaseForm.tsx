@@ -1,5 +1,5 @@
-import type { FormEventHandler } from 'react';
-import { Turnstile } from '@marsidev/react-turnstile';
+import { useEffect, useRef, type FormEventHandler } from 'react';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Button } from '../ui/Button';
 import { ArrowLeft } from 'lucide-react';
 import { isCaseCategoryId, type CaseCategoryId } from '../../types/case';
@@ -45,7 +45,30 @@ export const CreateCaseForm = ({
   onTurnstileError,
   onSubmit,
   onBack,
-}: CreateCaseFormProps) => (
+}: CreateCaseFormProps) => {
+  const formRef = useRef<HTMLFormElement>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+  const pendingSubmit = useRef(false);
+
+  useEffect(() => {
+    if (pendingSubmit.current && turnstileToken) {
+      pendingSubmit.current = false;
+      formRef.current?.requestSubmit();
+    }
+  }, [turnstileToken]);
+
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
+    if (!turnstileSiteKey || turnstileToken) {
+      onSubmit(event);
+      return;
+    }
+
+    event.preventDefault();
+    pendingSubmit.current = true;
+    turnstileRef.current?.execute();
+  };
+
+  return (
   <div className="glass-card fade-in create-case-form-card">
     <div className="create-case-heading">
       {onBack && (
@@ -56,7 +79,7 @@ export const CreateCaseForm = ({
       <h2>Criar nova denúncia</h2>
     </div>
 
-    <form onSubmit={onSubmit} className="create-case-form">
+    <form ref={formRef} onSubmit={handleSubmit} className="create-case-form">
       {error && <div className="create-case-error" role="alert">{error}</div>}
 
       <div className="create-case-field">
@@ -125,30 +148,38 @@ export const CreateCaseForm = ({
         />
       </div>
 
-      <div className="create-case-turnstile">
-        {turnstileSiteKey ? (
-          <Turnstile
-            siteKey={turnstileSiteKey}
-            onSuccess={onTurnstileSuccess}
-            onExpire={onTurnstileExpire}
-            onError={onTurnstileError}
-            options={{ language: 'pt-br', theme: 'dark' }}
-          />
-        ) : (
-          <span className="create-case-warning">
-            A validação de segurança não está configurada neste ambiente.
-          </span>
-        )}
-      </div>
+      {turnstileSiteKey && (
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={turnstileSiteKey}
+          onSuccess={onTurnstileSuccess}
+          onExpire={() => {
+            pendingSubmit.current = false;
+            onTurnstileExpire();
+          }}
+          onError={() => {
+            pendingSubmit.current = false;
+            onTurnstileError();
+          }}
+          options={{
+            language: 'pt-br',
+            theme: 'dark',
+            size: 'invisible',
+            execution: 'execute',
+            appearance: 'interaction-only',
+          }}
+        />
+      )}
 
       <Button
         variant="primary"
         type="submit"
-        disabled={isLoading || !turnstileToken}
+        disabled={isLoading}
         className="create-case-submit"
       >
         {isLoading ? 'Enviando de forma segura...' : 'Enviar denúncia'}
       </Button>
     </form>
   </div>
-);
+  );
+};

@@ -412,8 +412,6 @@ body {
 .create-case-control { width: 100%; padding: 14px; color: #fff; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--bg-card-border); border-radius: var(--radius-sm); outline: none; font: inherit; font-size: 1rem; }
 .create-case-control:focus-visible { border-color: var(--color-primary); box-shadow: var(--focus-ring); }
 .create-case-textarea { resize: vertical; }
-.create-case-turnstile { padding: 8px 0; }
-.create-case-warning { color: var(--color-warning); font-size: 0.9rem; }
 .create-case-submit { width: 100%; margin-top: 8px; padding: 14px; font-size: 1rem; }
 @keyframes safeline-skeleton { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @keyframes safeline-spin { to { transform: rotate(360deg); } }
