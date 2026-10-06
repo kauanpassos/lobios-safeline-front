@@ -37,7 +37,9 @@ A aplicação também disponibiliza uma área autenticada para consulta das den�
 | React Router 7 | Navegação e roteamento SPA |
 | CSS | Estilos, temas e layout responsivo |
 | Lucide React | Ícones da interface |
-| Cloudflare Turnstile | Proteção contra automação e bots |
+| Cloudflare Turnstile | Proteção contra automação e bots, com validação no backend |
+| Vitest | Execução dos testes automatizados |
+| ESLint | Análise estática e padronização do código |
 | Firebase Hosting | Hospedagem da aplicação |
 
 ## Funcionalidades
@@ -81,3 +83,44 @@ src/
 ├── types/                  # Tipagens e contratos da aplicação
 ├── App.tsx                 # Configuração das rotas
 └── index.css               # Estilos e tokens globais
+```
+
+## Configuração local
+
+Requisitos: Node.js e npm.
+
+1. Instale as dependências:
+
+   ```bash
+   npm install
+   ```
+
+2. Copie `.env.example` para `.env` e configure os valores locais. No PowerShell:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   | Variável | Descrição |
+   | --- | --- |
+   | `VITE_API_URL` | URL base da API SafeLine |
+   | `VITE_TURNSTILE_SITE_KEY` | Chave pública do widget Cloudflare Turnstile |
+
+   Arquivos `.env` locais são ignorados pelo Git. Mantenha `.env.example` atualizado apenas com nomes de variáveis e valores fictícios. Variáveis com prefixo `VITE_` são incluídas no bundle do navegador; não coloque segredos, tokens privados ou credenciais nelas.
+
+3. Inicie a aplicação:
+
+   ```bash
+   npm run dev
+   ```
+
+## Scripts
+
+```bash
+npm run dev      # Servidor local com HMR
+npm run build    # Verificação TypeScript e build de produção
+npm run lint     # Análise estática com ESLint
+npm run test     # Testes automatizados com Vitest
+npm run preview  # Pré-visualização do build local
+
+```
