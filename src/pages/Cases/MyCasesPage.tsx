@@ -10,12 +10,16 @@ type TabType = typeof TABS[number];
 
 export const MyCasesPage: React.FC = () => {
   const navigate = useNavigate();
+  const canViewPriority = ['Admin', 'HR', 'HR_MANAGER'].includes(
+    localStorage.getItem('@SafeLine:role') ?? ''
+  );
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('Todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const showPriorityColumn = canViewPriority && cases.some((item) => Boolean(item.priority));
 
   const handleRetry = useCallback(() => {
     setIsLoading(true);
@@ -43,7 +47,7 @@ export const MyCasesPage: React.FC = () => {
           title: item.title || 'Denúncia sem título',
           description: item.description || 'Detalhes protegidos. Clique para visualizar.',
           status: item.status || 'Recebido',
-          priority: item.priority || 'Média',
+          priority: item.priority,
           updatedAt: formatDate(item.createdAt),
         })));
       } catch (err: unknown) {
@@ -146,11 +150,11 @@ export const MyCasesPage: React.FC = () => {
             </div>
           )}
 
-          <div className="cases-table" role="table" aria-label="Lista de denúncias">
+          <div className={`cases-table${showPriorityColumn ? ' has-priority' : ''}`} role="table" aria-label="Lista de denúncias">
             <div className="cases-table-header" role="row">
               <span>Assunto</span>
               <span>Categoria</span>
-              <span>Prioridade</span>
+              {showPriorityColumn && <span>Prioridade</span>}
               <span>Status</span>
               <span>Última atualização</span>
               <span>Ações</span>
@@ -174,7 +178,7 @@ export const MyCasesPage: React.FC = () => {
                 <div className="case-row" key={item.id} role="row">
                   <span><strong>{item.title}</strong><small>{item.description}</small></span>
                   <span>{item.category}</span>
-                  <span>{item.priority}</span>
+                  {showPriorityColumn && <span>{item.priority ?? '—'}</span>}
                   <span><em>{item.status}</em></span>
                   <span>{item.updatedAt}</span>
                   <span>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Mail, Lock, LogIn, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -19,15 +19,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const redirectTimeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current !== null) {
-        window.clearTimeout(redirectTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const validate = (dataToValidate: LoginFormData): boolean => {
     const newErrors: Partial<LoginFormData> = {};
@@ -74,10 +65,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       localStorage.setItem('@SafeLine:token', data.token);
       if (data.role) localStorage.setItem('@SafeLine:role', data.role);
       if (data.email) localStorage.setItem('@SafeLine:email', data.email);
-      setSuccessMessage('Autenticado com sucesso. Redirecionando...');
-
       if (onSuccess) {
-        redirectTimeoutRef.current = window.setTimeout(() => onSuccess(data.email || sanitizedData.email, data.role), 800);
+        onSuccess(data.email || sanitizedData.email, data.role);
+      } else {
+        setSuccessMessage('Login realizado com sucesso.');
       }
       
     } catch (err: unknown) {

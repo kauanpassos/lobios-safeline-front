@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Mail, Lock, UserPlus, CheckCircle2, User, AlertCircle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -21,15 +21,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const redirectTimeoutRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current !== null) {
-        window.clearTimeout(redirectTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const validate = (dataToValidate: RegisterFormData): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
@@ -81,10 +72,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       }, parseEmptyResponse);
 
       setIsSuccess(true);
-      
-      if (onSuccess) {
-        redirectTimeoutRef.current = window.setTimeout(onSuccess, 2000);
-      }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro inesperado ao conectar ao servidor.';
       setApiError(errorMessage);
@@ -101,6 +88,11 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
         </div>
         <h3>Conta criada com sucesso!</h3>
         <p>Seu cadastro foi realizado no SafeLine. Você já pode realizar o login com suas credenciais corporativas.</p>
+        {onSuccess && (
+          <Button type="button" variant="primary" fullWidth onClick={onSuccess}>
+            Ir para o login
+          </Button>
+        )}
       </div>
     );
   }

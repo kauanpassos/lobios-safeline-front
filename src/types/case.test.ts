@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { parseMyCaseApiItems, parseCreateCaseResponse } from './case';
+import {
+  normalizeCaseDescription,
+  normalizeCaseTitle,
+  parseCaseDetailsResponse,
+  parseMyCaseApiItems,
+  parseCreateCaseResponse,
+} from './case';
 
 describe('case.ts - Parsers e Normalizadores', () => {
   const mockValidCaseItem = {
@@ -35,6 +41,12 @@ describe('case.ts - Parsers e Normalizadores', () => {
       expect(result[2].status).toBe('Encerrado');
     });
 
+    it('deve preservar prioridade nula sem substituí-la por um valor padrão', () => {
+      const result = parseMyCaseApiItems([{ ...mockValidCaseItem, priority: null }]);
+
+      expect(result[0].priority).toBeNull();
+    });
+
     it('deve usar o fallback "Recebido" para status desconhecidos sem quebrar a lista', () => {
       const payload = [{ ...mockValidCaseItem, status: 'StatusBizarroInexistente' }];
       const result = parseMyCaseApiItems(payload);
@@ -58,5 +70,22 @@ describe('case.ts - Parsers e Normalizadores', () => {
       expect(result.protocol).toBe('PROT-123');
       expect(result.message).toBe('Sucesso');
     });
+  });
+
+  it('deve preservar prioridade nula nos detalhes da denúncia', () => {
+    const result = parseCaseDetailsResponse({
+      id: 'case-1',
+      category: 'Fraude',
+      status: 'Recebido',
+      priority: null,
+      createdAt: '2026-01-01T00:00:00Z',
+    });
+
+    expect(result.priority).toBeNull();
+  });
+
+  it('deve normalizar espaços do assunto e do relato sem juntar parágrafos', () => {
+    expect(normalizeCaseTitle('  Falha   no\n processo  ')).toBe('Falha no processo');
+    expect(normalizeCaseDescription('  Linha   um\r\n\r\n\r\n linha\t dois  ')).toBe('Linha um\n\nlinha dois');
   });
 });
