@@ -2,6 +2,8 @@ import { useCallback, useState, type FormEventHandler } from 'react';
 import { apiFetch } from '../services/api';
 import {
   parseCreateCaseResponse,
+  normalizeCaseDescription,
+  normalizeCaseTitle,
   type CaseCategoryId,
   type CreateCasePayload,
 } from '../types/case';
@@ -47,8 +49,28 @@ export const useCreateCase = (): UseCreateCaseResult => {
       return;
     }
 
-    if (!title.trim() || !description.trim()) {
-      setError('Preencha o título e a descrição da denúncia.');
+    const normalizedTitle = normalizeCaseTitle(title);
+    const normalizedDescription = normalizeCaseDescription(description);
+    setTitle(normalizedTitle);
+    setDescription(normalizedDescription);
+
+    if (!normalizedTitle) {
+      setError('Informe um assunto para a denúncia.');
+      return;
+    }
+
+    if (normalizedTitle.length > 150) {
+      setError('O assunto deve ter no máximo 150 caracteres.');
+      return;
+    }
+
+    if (normalizedDescription.length < 10) {
+      setError('Descreva o ocorrido com pelo menos 10 caracteres.');
+      return;
+    }
+
+    if (normalizedDescription.length > 5000) {
+      setError('O relato deve ter no máximo 5.000 caracteres.');
       return;
     }
 
@@ -58,9 +80,8 @@ export const useCreateCase = (): UseCreateCaseResult => {
     try {
       const payload: CreateCasePayload = {
         categoryId,
-        title: title.trim(),
-        description: description.trim(),
-        priority: 'Média',
+        title: normalizedTitle,
+        description: normalizedDescription,
         turnstileToken,
       };
 

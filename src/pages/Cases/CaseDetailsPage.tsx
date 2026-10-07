@@ -102,7 +102,10 @@ export function CaseDetailsPage() {
             </div>
             <div>
               <h2 style={{ fontSize: '1.2rem', color: '#F1F5F9', marginBottom: '2px' }}>{caseDetails.title}</h2>
-              <p style={{ fontSize: '0.85rem', color: '#829ABB' }}>Categoria: {caseDetails.category} | Prioridade: {caseDetails.priority}</p>
+              <p style={{ fontSize: '0.85rem', color: '#829ABB' }}>
+                Categoria: {caseDetails.category}
+                {caseDetails.priority && <> | Prioridade: {caseDetails.priority}</>}
+              </p>
             </div>
           </div>
 

@@ -63,19 +63,30 @@ export const normalizeStatus = (value: string): CaseStatus => {
   return 'Recebido';
 };
 
-export const normalizePriority = (value: unknown): CasePriority => {
+export const normalizePriority = (value: unknown): CasePriority | null => {
   if (typeof value === 'string' && (CASE_PRIORITIES as readonly string[]).includes(value)) {
     return value as CasePriority;
   }
 
-  return 'Média';
+  return null;
 };
+
+export const normalizeCaseTitle = (value: string): string =>
+  value.trim().split(/\s+/).filter(Boolean).join(' ');
+
+export const normalizeCaseDescription = (value: string): string =>
+  value
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
 export interface CreateCasePayload {
   categoryId: CaseCategoryId;
   title: string;
   description: string;
-  priority: CasePriority;
   turnstileToken: string;
 }
 
@@ -90,7 +101,7 @@ export interface CaseSummary {
   title: string;
   description: string;
   status: CaseStatus;
-  priority: CasePriority;
+  priority: CasePriority | null;
   updatedAt: string;
 }
 
@@ -100,7 +111,7 @@ export interface MyCaseApiItem {
   title?: string;
   description?: string;
   status: CaseStatus;
-  priority: CasePriority;
+  priority: CasePriority | null;
   createdAt: string;
 }
 
@@ -110,7 +121,7 @@ export interface CaseDetails {
   title: string;
   description: string;
   status: CaseStatus;
-  priority: CasePriority;
+  priority: CasePriority | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -134,18 +145,36 @@ const isString = (value: unknown): value is string => typeof value === 'string';
 
 export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   if (!Array.isArray(payload)) {
-    return [];
+    throw new Error('Invalid cases response.');
   }
 
   return payload.map((caseItem) => {
-    const record = isRecord(caseItem) ? caseItem : {};
-    const id = isString(record.id) ? record.id : String(Math.random());
-    const category = normalizeCategory(record.category || record.categoryId);
-    const status = normalizeStatus(isString(record.status) ? record.status : 'Recebido');
+    if (!isRecord(caseItem)) {
+      throw new Error('Invalid case item response.');
+    }
+
+    const record = caseItem;
+    const categoryValue = record.category ?? record.categoryId;
+    const titleValue = isString(record.title) ? record.title : undefined;
+    const descriptionValue = isString(record.description) ? record.description : record.content;
+
+    if (
+      !isString(record.id) ||
+      !isString(categoryValue) ||
+      !isString(record.status) ||
+      !isString(record.createdAt) ||
+      (!titleValue && !isString(descriptionValue))
+    ) {
+      throw new Error('Invalid case item response.');
+    }
+
+    const id = record.id;
+    const category = normalizeCategory(categoryValue);
+    const status = normalizeStatus(record.status);
     const priority = normalizePriority(record.priority);
-    const createdAt = isString(record.createdAt) ? record.createdAt : new Date().toISOString();
-    const title = isString(record.title) ? record.title : (isString(record.description) ? record.description : 'Denúncia sem título');
-    const description = isString(record.description) ? record.description : (isString(record.content) ? record.content : 'Sem descrição.');
+    const createdAt = record.createdAt;
+    const description = isString(descriptionValue) ? descriptionValue : '';
+    const title = titleValue || description;
 
     return {
       id,
@@ -197,7 +226,7 @@ export interface AdminCaseItem {
   status: CaseStatus;
   createdAtWindow?: string;
   createdAt?: string;
-  priority: CasePriority;
+  priority: CasePriority | null;
   assignedUserId?: string;
   assignedUserName?: string;
 }
@@ -238,7 +267,7 @@ export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
     const rawId = isRecord(item) && isString(item.id) ? item.id : String(Math.random());
     const rawCreatedAtWindow = isRecord(item) && isString(item.createdAtWindow) ? item.createdAtWindow : undefined;
     const rawCreatedAt = isRecord(item) && isString(item.createdAt) ? item.createdAt : undefined;
-    const rawPriority = isRecord(item) && isString(item.priority) ? normalizePriority(item.priority) : 'Média';
+    const rawPriority = isRecord(item) && isString(item.priority) ? normalizePriority(item.priority) : null;
     const rawAssignedUserId = isRecord(item) && isString(item.assignedUserId) ? item.assignedUserId : undefined;
     const rawAssignedUserName = isRecord(item) && isString(item.assignedUserName) ? item.assignedUserName : undefined;
 
@@ -258,4 +287,3 @@ export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
     };
   });
 };
-

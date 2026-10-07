@@ -125,6 +125,7 @@ export const CreateCaseForm = ({
           id="case-description"
           required
           minLength={10}
+          maxLength={5000}
           rows={6}
           value={description}
           onChange={(event) => onDescriptionChange(event.currentTarget.value)}
