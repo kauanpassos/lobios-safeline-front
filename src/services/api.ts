@@ -17,6 +17,27 @@ export class ApiError extends Error {
   }
 }
 
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (!(error instanceof ApiError)) {
+    return error instanceof Error ? error.message : fallback;
+  }
+
+  if (
+    error.status >= 500 &&
+    typeof error.details === 'object' &&
+    error.details !== null &&
+    'detail' in error.details &&
+    typeof error.details.detail === 'string'
+  ) {
+    const traceId = 'traceId' in error.details && typeof error.details.traceId === 'string'
+      ? ` (Referência: ${error.details.traceId})`
+      : '';
+    return `${error.details.detail}${traceId}`;
+  }
+
+  return error.message || fallback;
+}
+
 export interface ApiFetchOptions extends RequestInit {
   signal?: AbortSignal;
 }
@@ -73,8 +94,8 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
 
     try {
       return parseResponse(data);
-    } catch {
-      throw new ApiError('Resposta inválida do servidor.', response.status, null);
+    } catch (error: unknown) {
+      throw new ApiError('Resposta inválida do servidor.', response.status, error);
     }
   } catch (error: unknown) {
     if (error instanceof ApiError) {

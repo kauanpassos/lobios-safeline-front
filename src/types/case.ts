@@ -18,12 +18,23 @@ export type CaseCategory = typeof CASE_CATEGORIES[number];
 export const CASE_CATEGORY_IDS = ['assédio', 'fraude', 'conduta', 'sugestao', 'outro'] as const;
 export type CaseCategoryId = typeof CASE_CATEGORY_IDS[number];
 
-export const isCaseCategoryId = (value: string): value is CaseCategoryId => (
-  CASE_CATEGORY_IDS.includes(value as CaseCategoryId)
-);
+const isOneOf = <T extends string>(values: readonly T[], value: string): value is T =>
+  values.some((candidate) => candidate === value);
+
+export const isCaseCategoryId = (value: string): value is CaseCategoryId =>
+  isOneOf(CASE_CATEGORY_IDS, value);
+
+const decodeNumericHtmlEntities = (value: string): string =>
+  value.replace(/&#(?:x([0-9a-f]+)|([0-9]+));/gi, (entity, hexadecimal: string | undefined, decimal: string | undefined) => {
+    const codePoint = Number.parseInt(hexadecimal ?? decimal ?? '', hexadecimal ? 16 : 10);
+    return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+      ? String.fromCodePoint(codePoint)
+      : entity;
+  });
 
 export const normalizeCategory = (value: unknown): CaseCategory => {
-  if (typeof value !== 'string') return 'Outro';
+  if (typeof value !== 'string') throw new Error('Invalid case category.');
+  const normalizedValue = decodeNumericHtmlEntities(value);
 
   const categories: Record<CaseCategoryId, CaseCategory> = {
     assédio: 'Assédio',
@@ -33,15 +44,12 @@ export const normalizeCategory = (value: unknown): CaseCategory => {
     outro: 'Outro',
   };
 
-  if (isCaseCategoryId(value)) {
-    return categories[value];
+  if (isCaseCategoryId(normalizedValue)) {
+    return categories[normalizedValue];
   }
 
-  if (CASE_CATEGORIES.includes(value as CaseCategory)) {
-    return value as CaseCategory;
-  }
-
-  return 'Outro';
+  if (isOneOf(CASE_CATEGORIES, normalizedValue)) return normalizedValue;
+  throw new Error('Invalid case category.');
 };
 
 export const normalizeStatus = (value: string): CaseStatus => {
@@ -52,20 +60,18 @@ export const normalizeStatus = (value: string): CaseStatus => {
     Deletar: 'Encerrado',
   };
 
-  if (CASE_STATUSES.includes(value as CaseStatus)) {
-    return value as CaseStatus;
-  }
+  if (isOneOf(CASE_STATUSES, value)) return value;
 
   if (legacyStatuses[value]) {
     return legacyStatuses[value];
   }
 
-  return 'Recebido';
+  throw new Error('Invalid case status.');
 };
 
 export const normalizePriority = (value: unknown): CasePriority | null => {
-  if (typeof value === 'string' && (CASE_PRIORITIES as readonly string[]).includes(value)) {
-    return value as CasePriority;
+  if (typeof value === 'string' && isOneOf(CASE_PRIORITIES, value)) {
+    return value;
   }
 
   return null;
@@ -142,6 +148,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
 );
 
 const isString = (value: unknown): value is string => typeof value === 'string';
+const parseStringArray = (value: unknown): string[] => {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || !value.every(isString)) {
+    throw new Error('Invalid string array response.');
+  }
+  return value;
+};
 
 export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   if (!Array.isArray(payload)) {
@@ -163,6 +176,7 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
       !isString(categoryValue) ||
       !isString(record.status) ||
       !isString(record.createdAt) ||
+      Number.isNaN(Date.parse(record.createdAt)) ||
       (!titleValue && !isString(descriptionValue))
     ) {
       throw new Error('Invalid case item response.');
@@ -189,18 +203,34 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
 };
 
 export const parseCaseDetailsResponse = (payload: unknown): CaseDetails => {
-  if (!isRecord(payload) || !isString(payload.id)) {
+  if (
+    !isRecord(payload) ||
+    !isString(payload.id) ||
+    !isString(payload.category ?? payload.categoryId) ||
+    !isString(payload.status) ||
+    !isString(payload.createdAt) ||
+    Number.isNaN(Date.parse(payload.createdAt))
+  ) {
+    throw new Error('Resposta de detalhes da denúncia inválida.');
+  }
+
+  const title = isString(payload.title)
+    ? payload.title
+    : isString(payload.description)
+      ? payload.description
+      : payload.content;
+  if (!isString(title) || !title.trim()) {
     throw new Error('Resposta de detalhes da denúncia inválida.');
   }
 
   return {
     id: payload.id,
     category: normalizeCategory(payload.category ?? payload.categoryId),
-    title: isString(payload.title) ? payload.title : (isString(payload.content) ? payload.content : 'Denúncia sem título'),
+    title,
     description: isString(payload.description) ? payload.description : (isString(payload.content) ? payload.content : ''),
-    status: normalizeStatus(isString(payload.status) ? payload.status : 'Recebido'),
+    status: normalizeStatus(payload.status),
     priority: normalizePriority(payload.priority),
-    createdAt: isString(payload.createdAt) ? payload.createdAt : new Date().toISOString(),
+    createdAt: payload.createdAt,
     updatedAt: isString(payload.updatedAt) ? payload.updatedAt : undefined,
   };
 };
@@ -226,9 +256,16 @@ export interface AdminCaseItem {
   status: CaseStatus;
   createdAtWindow?: string;
   createdAt?: string;
+  updatedAt?: string;
   priority: CasePriority | null;
-  assignedUserId?: string;
-  assignedUserName?: string;
+  assignedUserIds: string[];
+}
+
+export interface CaseStatusHistoryItem {
+  id: string;
+  previousStatus: CaseStatus;
+  newStatus: CaseStatus;
+  createdAt: string;
 }
 
 export interface CaseMessageItem {
@@ -236,6 +273,7 @@ export interface CaseMessageItem {
   caseId: string;
   senderId: string;
   senderName?: string;
+  senderRole?: string;
   content: string;
   isFromAdmin: boolean;
   createdAt: string;
@@ -253,37 +291,149 @@ export interface CaseAttachmentItem {
 
 export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
   if (!Array.isArray(payload)) {
-    return [];
+    throw new Error('Invalid admin cases response.');
   }
 
   return payload.map((item) => {
-    const rawCategory = isRecord(item) && isString(item.categoryId) ? item.categoryId : 'outro';
-    const rawStatus = isRecord(item) && isString(item.status) ? item.status : 'Recebido';
-    const rawTitle = isRecord(item) && isString(item.title) ? item.title : undefined;
-    const rawDescription = isRecord(item) && isString(item.description) ? item.description : undefined;
-    const rawContent = isRecord(item) && isString(item.content) 
-      ? item.content 
-      : (rawDescription || rawTitle || 'Ocorrência registrada no canal SafeLine.');
-    const rawId = isRecord(item) && isString(item.id) ? item.id : String(Math.random());
-    const rawCreatedAtWindow = isRecord(item) && isString(item.createdAtWindow) ? item.createdAtWindow : undefined;
-    const rawCreatedAt = isRecord(item) && isString(item.createdAt) ? item.createdAt : undefined;
-    const rawPriority = isRecord(item) && isString(item.priority) ? normalizePriority(item.priority) : null;
-    const rawAssignedUserId = isRecord(item) && isString(item.assignedUserId) ? item.assignedUserId : undefined;
-    const rawAssignedUserName = isRecord(item) && isString(item.assignedUserName) ? item.assignedUserName : undefined;
+    if (
+      !isRecord(item) ||
+      !isString(item.id) ||
+      !isString(item.categoryId) ||
+      !isString(item.status) ||
+      !isString(item.title) ||
+      !isString(item.description) ||
+      !isString(item.createdAtWindow) ||
+      (item.createdAt !== undefined &&
+        (!isString(item.createdAt) || Number.isNaN(Date.parse(item.createdAt)))) ||
+      (item.updatedAt !== undefined &&
+        item.updatedAt !== null &&
+        (!isString(item.updatedAt) || Number.isNaN(Date.parse(item.updatedAt))))
+    ) {
+      throw new Error('Invalid admin case item response.');
+    }
 
     return {
-      id: rawId,
-      categoryId: rawCategory,
-      category: normalizeCategory(rawCategory),
-      title: rawTitle,
-      description: rawDescription || rawContent,
-      content: rawContent,
-      status: normalizeStatus(rawStatus),
-      createdAtWindow: rawCreatedAtWindow,
-      createdAt: rawCreatedAt,
-      priority: rawPriority,
-      assignedUserId: rawAssignedUserId,
-      assignedUserName: rawAssignedUserName,
+      id: item.id,
+      categoryId: item.categoryId,
+      category: normalizeCategory(item.categoryId),
+      title: item.title,
+      description: item.description,
+      content: item.description,
+      status: normalizeStatus(item.status),
+      createdAtWindow: item.createdAtWindow,
+      createdAt: isString(item.createdAt) ? item.createdAt : undefined,
+      updatedAt: isString(item.updatedAt) ? item.updatedAt : undefined,
+      priority: normalizePriority(item.priority),
+      assignedUserIds: parseStringArray(item.assignedUserIds),
+    };
+  });
+};
+
+export const parseAdminCaseDetailResponse = (payload: unknown): AdminCaseItem => {
+  if (
+    !isRecord(payload) ||
+    !isString(payload.id) ||
+    !isString(payload.categoryId) ||
+    !isString(payload.status) ||
+    !isString(payload.title) ||
+    !isString(payload.description) ||
+    !isString(payload.createdAtWindow) ||
+    !isString(payload.createdAt) ||
+    Number.isNaN(Date.parse(payload.createdAt)) ||
+    (payload.updatedAt !== undefined &&
+      payload.updatedAt !== null &&
+      (!isString(payload.updatedAt) || Number.isNaN(Date.parse(payload.updatedAt))))
+  ) {
+    throw new Error('Invalid admin case details response.');
+  }
+
+  return {
+    id: payload.id,
+    categoryId: payload.categoryId,
+    category: normalizeCategory(payload.categoryId),
+    title: payload.title,
+    description: payload.description,
+    content: isString(payload.content) ? payload.content : payload.description,
+    status: normalizeStatus(payload.status),
+    createdAtWindow: payload.createdAtWindow,
+    createdAt: payload.createdAt,
+    updatedAt: isString(payload.updatedAt) ? payload.updatedAt : undefined,
+    priority: normalizePriority(payload.priority),
+    assignedUserIds: parseStringArray(payload.assignedUserIds),
+  };
+};
+
+export const parseCaseStatusHistoryItems = (payload: unknown): CaseStatusHistoryItem[] => {
+  if (!Array.isArray(payload)) {
+    throw new Error('Invalid case status history response.');
+  }
+
+  return payload.map((item) => {
+    if (
+      !isRecord(item) ||
+      !isString(item.id) ||
+      !isString(item.previousStatus) ||
+      !isString(item.newStatus) ||
+      !isString(item.createdAt) ||
+      Number.isNaN(Date.parse(item.createdAt))
+    ) {
+      throw new Error('Invalid case status history item response.');
+    }
+
+    return {
+      id: item.id,
+      previousStatus: normalizeStatus(item.previousStatus),
+      newStatus: normalizeStatus(item.newStatus),
+      createdAt: item.createdAt,
+    };
+  });
+};
+
+export const parseCaseMessageItems = (payload: unknown, expectedCaseId: string): CaseMessageItem[] => {
+  if (!Array.isArray(payload)) {
+    throw new Error('Invalid case messages response.');
+  }
+
+  return payload.map((item) => {
+    if (
+      !isRecord(item) ||
+      !isString(item.id) ||
+      !isString(item.caseId) ||
+      item.caseId !== expectedCaseId ||
+      !isString(item.content)
+    ) {
+      throw new Error('Invalid case message response.');
+    }
+
+    const senderRole = isString(item.senderRole) ? item.senderRole : '';
+    const createdAt = isString(item.createdAt)
+      ? item.createdAt
+      : isString(item.sentAt)
+        ? item.sentAt
+        : null;
+
+    if (createdAt === null || Number.isNaN(Date.parse(createdAt))) {
+      throw new Error('Invalid case message timestamp.');
+    }
+
+    const senderId = isString(item.senderUserId)
+      ? item.senderUserId
+      : isString(item.senderId)
+        ? item.senderId
+        : isString(item.userId)
+          ? item.userId
+          : '';
+    const isFromAdmin = senderRole === 'Admin' || senderRole === 'HR';
+
+    return {
+      id: item.id,
+      caseId: item.caseId,
+      senderId,
+      senderName: isFromAdmin ? 'Equipe de RH' : 'Colaborador',
+      senderRole,
+      content: item.content,
+      isFromAdmin,
+      createdAt,
     };
   });
 };

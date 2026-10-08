@@ -1,206 +1,235 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, FileText, Clock, CheckCircle2, AlertTriangle, ArrowRight, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, FileText, RefreshCw, ShieldAlert } from 'lucide-react';
+import { CaseStatusBadge } from '../../components/rh/CaseStatusBadge';
+import { MetricCard } from '../../components/rh/MetricCard';
+import { RhAnalyticsChart } from '../../components/rh/RhAnalyticsChart';
 import { fetchAdminCases } from '../../services/rhService';
 import type { AdminCaseItem } from '../../types/case';
+import {
+  getCategoryDistribution,
+  getMonthlyTrend,
+  getStatusCount,
+  getStatusDistribution,
+  type CaseAnalyticsDimension,
+  type CaseChartType,
+} from './analytics/caseAnalytics';
 
+const DASHBOARD_CASE_LIMIT = 100;
 
-export const RhDashboardPage: React.FC = () => {
+const formatDate = (value?: string): string => {
+  if (!value) return 'Não informado';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Não informado' : date.toLocaleDateString('pt-BR');
+};
+
+export function RhDashboardPage() {
   const [cases, setCases] = useState<AdminCaseItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const [dimension, setDimension] = useState<CaseAnalyticsDimension>('status');
+  const [chartType, setChartType] = useState<CaseChartType>('bar');
   const navigate = useNavigate();
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadCases = async () => {
+      setIsLoading(true);
       setError(null);
-      const data = await fetchAdminCases(100);
-      setCases(data);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Não foi possível carregar as denúncias. Verifique se seu usuário possui permissão de RH.';
-      setError(msg);
-    } finally {
-      setLoading(false);
+
+      try {
+        const result = await fetchAdminCases(DASHBOARD_CASE_LIMIT, controller.signal);
+        if (!controller.signal.aborted) setCases(result);
+      } catch (loadError: unknown) {
+        if (!controller.signal.aborted) {
+          setCases([]);
+          setError(loadError instanceof Error ? loadError.message : 'Não foi possível carregar as denúncias.');
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    };
+
+    void loadCases();
+    return () => controller.abort();
+  }, [refreshVersion]);
+
+  const statusDistribution = getStatusDistribution(cases);
+  const pendingCases = getStatusCount(statusDistribution, ['Recebido', 'Em análise']);
+  const inProgressCases = getStatusCount(statusDistribution, ['Em investigação', 'Aguardando informações']);
+  const completedCases = getStatusCount(statusDistribution, ['Resolvido', 'Encerrado']);
+  const highPriorityCases = cases.filter((item) => item.priority === 'Alta' || item.priority === 'Crítica').length;
+  const points = dimension === 'status'
+    ? statusDistribution
+    : dimension === 'category'
+      ? getCategoryDistribution(cases)
+      : getMonthlyTrend(cases);
+  const isTimeDimension = dimension === 'monthly';
+  const chartTitle = dimension === 'status'
+    ? 'Distribuição por status'
+    : dimension === 'category'
+      ? 'Distribuição por categoria'
+      : 'Evolução mensal dos registros';
+  const hasTemporalData = points.length >= 2;
+  const recentHighPriorityCases = cases
+    .filter((item) => item.priority === 'Alta' || item.priority === 'Crítica')
+    .slice(0, 5);
+
+  const handleDimensionChange = (value: string) => {
+    if (value === 'status' || value === 'category' || value === 'monthly') {
+      setDimension(value);
+      setChartType(value === 'monthly' ? 'line' : 'bar');
     }
   };
 
-  useEffect(() => {
-    let isSubscribed = true;
-    const initLoad = async () => {
-      try {
-        setError(null);
-        const data = await fetchAdminCases(100);
-        if (isSubscribed) {
-          setCases(data);
-        }
-      } catch (err: unknown) {
-        if (isSubscribed) {
-          const msg = err instanceof Error ? err.message : 'Não foi possível carregar as denúncias. Verifique se seu usuário possui permissão de RH.';
-          setError(msg);
-        }
-      } finally {
-        if (isSubscribed) {
-          setLoading(false);
-        }
-      }
-    };
-    void initLoad();
-    return () => {
-      isSubscribed = false;
-    };
-  }, []);
-
-  // Métricas calculadas
-  const totalCases = cases.length;
-  const pendingCases = cases.filter((c) => c.status === 'Recebido').length;
-  const inProgressCases = cases.filter((c) => c.status === 'Em análise' || c.status === 'Em investigação').length;
-  const resolvedCases = cases.filter((c) => c.status === 'Resolvido' || c.status === 'Encerrado').length;
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Recebido':
-        return <span className="status-badge status-badge--pending">Recebido</span>;
-      case 'Em análise':
-      case 'Em investigação':
-        return <span className="status-badge status-badge--progress">Em Análise</span>;
-      case 'Resolvido':
-      case 'Encerrado':
-        return <span className="status-badge status-badge--completed">Resolvido</span>;
-      default:
-        return <span className="status-badge">{status}</span>;
-    }
+  const handleChartTypeChange = (value: string) => {
+    if (value === 'bar' || value === 'donut' || value === 'line') setChartType(value);
   };
 
   return (
     <div className="rh-dashboard">
-      <div className="dashboard-page-header">
+      <header className="rh-page-header">
         <div>
-          <h1 className="dashboard-page-title">Painel de Gestão e Compliance (RH)</h1>
+          <h1 className="dashboard-page-title">Painel RH</h1>
           <p className="dashboard-page-subtitle">
-            Acompanhamento centralizado e análise de denúncias corporativas da empresa.
+            Visão analítica dos até {DASHBOARD_CASE_LIMIT} registros mais recentes disponibilizados pela API.
           </p>
         </div>
-        <button className="rh-btn-refresh" onClick={loadData} disabled={loading}>
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          <span>Atualizar</span>
+        <button
+          type="button"
+          className="rh-button rh-button--secondary"
+          onClick={() => setRefreshVersion((version) => version + 1)}
+          disabled={isLoading}
+        >
+          <RefreshCw size={16} aria-hidden="true" className={isLoading ? 'rh-spin' : ''} />
+          Atualizar dados
         </button>
-      </div>
+      </header>
 
       {error && (
-        <div className="alert alert--error mb-6">
-          <AlertTriangle size={18} />
-          <span>{error}</span>
+        <div className="rh-alert rh-alert--error" role="alert">
+          <ShieldAlert size={18} aria-hidden="true" />
+          <span>Não foi possível carregar os dados do painel.</span>
+          <button
+            type="button"
+            className="rh-alert__action"
+            onClick={() => setRefreshVersion((version) => version + 1)}
+          >
+            Tentar novamente
+          </button>
         </div>
       )}
 
-      {/* Cards de Estatísticas */}
-      <div className="rh-stats-grid mb-8">
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--total">
-            <FileText size={24} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Total de Ocorrências</span>
-            <span className="rh-stat-value">{loading ? '...' : totalCases}</span>
-          </div>
-        </div>
+      <section className="rh-stats-grid" aria-label="Indicadores dos casos carregados">
+        <MetricCard title="Registros na amostra" value={isLoading ? '…' : cases.length} icon={<FileText size={22} />} tone="blue" />
+        <MetricCard title="Aguardando triagem" value={isLoading ? '…' : pendingCases} icon={<Clock size={22} />} tone="purple" />
+        <MetricCard title="Em atendimento" value={isLoading ? '…' : inProgressCases} icon={<ShieldAlert size={22} />} tone="amber" />
+        <MetricCard title="Concluídos" value={isLoading ? '…' : completedCases} icon={<CheckCircle2 size={22} />} tone="green" />
+      </section>
 
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--pending">
-            <Clock size={24} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Aguardando Análise</span>
-            <span className="rh-stat-value">{loading ? '...' : pendingCases}</span>
-          </div>
-        </div>
+      {!isLoading && !error && (
+        <>
+          <section className="rh-panel rh-analytics-controls" aria-label="Configuração da visualização analítica">
+            <label className="rh-select-field">
+              <span>Indicador</span>
+              <select value={dimension} onChange={(event) => handleDimensionChange(event.target.value)}>
+                <option value="status">Distribuição por status</option>
+                <option value="category">Distribuição por categoria</option>
+                <option value="monthly">Evolução mensal</option>
+              </select>
+            </label>
+            <label className="rh-select-field">
+              <span>Visualização</span>
+              <select value={chartType} onChange={(event) => handleChartTypeChange(event.target.value)}>
+                {isTimeDimension ? (
+                  <>
+                    <option value="line">Linha</option>
+                    <option value="bar">Barras</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="bar">Barras</option>
+                    <option value="donut">Rosca</option>
+                  </>
+                )}
+              </select>
+            </label>
+            <p className="rh-analytics-sample-note">
+              Os indicadores e gráficos refletem somente os registros carregados; não representam totais históricos.
+            </p>
+          </section>
 
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--progress">
-            <ShieldAlert size={24} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Em Investigação</span>
-            <span className="rh-stat-value">{loading ? '...' : inProgressCases}</span>
-          </div>
-        </div>
+          <RhAnalyticsChart title={chartTitle} points={points} chartType={chartType} />
 
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--success">
-            <CheckCircle2 size={24} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Casos Resolvidos</span>
-            <span className="rh-stat-value">{loading ? '...' : resolvedCases}</span>
-          </div>
-        </div>
-      </div>
+          {dimension === 'monthly' && !hasTemporalData && (
+            <p className="rh-analytics-note" role="status">
+              Ainda não há registros em meses diferentes para comparar a evolução temporal.
+            </p>
+          )}
 
-      {/* Seção de Denúncias Recentes */}
-      <div className="rh-recent-section card-box">
-        <div className="card-box-header">
-          <div>
-            <h2 className="text-xl font-bold">Ocorrências Recentes</h2>
-            <p className="text-sm text-gray font-normal">Denúncias mais recentes registradas pelos colaboradores</p>
-          </div>
-          <button className="rh-btn-view-all" onClick={() => navigate('/rh/casos')}>
-            <span>Ver Todas</span>
-            <ArrowRight size={15} className="rh-btn-arrow" />
-          </button>
-        </div>
+          <section className="rh-panel rh-priority-cases" aria-labelledby="rh-priority-cases-heading">
+            <header className="rh-panel__header">
+              <div>
+                <h2 id="rh-priority-cases-heading">Casos com prioridade alta ou crítica</h2>
+                <p>{highPriorityCases} caso(s) na amostra carregada.</p>
+              </div>
+              <button type="button" className="rh-button rh-button--link" onClick={() => navigate('/rh/cases')}>
+                Abrir gestão de denúncias <ArrowRight size={16} aria-hidden="true" />
+              </button>
+            </header>
+            {recentHighPriorityCases.length === 0 ? (
+              <div className="rh-state rh-state--inline">
+                <p>Não há casos com prioridade alta ou crítica nesta amostra.</p>
+              </div>
+            ) : (
+              <div className="rh-table-scroll" role="region" aria-label="Casos prioritários" tabIndex={0}>
+                <table className="rh-data-table rh-data-table--priority">
+                  <thead>
+                    <tr>
+                      <th scope="col">Identificador</th>
+                      <th scope="col">Categoria</th>
+                      <th scope="col">Prioridade</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Data de registro</th>
+                      <th scope="col">Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentHighPriorityCases.map((item) => (
+                      <tr key={item.id}>
+                        <td><span className="rh-case-code">#{item.id.slice(0, 8)}</span></td>
+                        <td>{item.category}</td>
+                        <td>{item.priority}</td>
+                        <td><CaseStatusBadge status={item.status} /></td>
+                        <td>{formatDate(item.createdAt)}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="rh-icon-button"
+                            aria-label={`Abrir detalhes do caso ${item.id.slice(0, 8)}`}
+                            onClick={() => navigate(`/rh/cases/${encodeURIComponent(item.id)}`)}
+                          >
+                            <ArrowRight size={16} aria-hidden="true" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
 
-        {loading ? (
-          <div className="py-8 text-center text-gray">Carregando dados das denúncias...</div>
-        ) : cases.length === 0 ? (
-          <div className="py-8 text-center text-gray">Nenhuma denúncia registrada até o momento.</div>
-        ) : (
-          <div className="table-responsive mt-4">
-            <table className="rh-table">
-              <thead>
-                <tr>
-                  <th>ID / Código</th>
-                  <th>Categoria</th>
-                  <th>Resumo do Relato</th>
-                  <th>Status</th>
-                  <th>Janela de Registro</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cases.slice(0, 5).map((item) => (
-                  <tr 
-                    key={item.id}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/rh/casos/${item.id}`)}
-                  >
-                    <td className="font-mono font-semibold text-primary">#{item.id ? item.id.substring(0, 8) : '--------'}</td>
-                    <td>
-                      <span className="category-pill">{item.category}</span>
-                    </td>
-                    <td className="max-w-xs truncate" title={item.description || item.content}>{item.description || item.content || item.title || 'Sem descrição'}</td>
-                    <td>{getStatusBadge(item.status)}</td>
-                    <td className="text-sm text-gray">{item.createdAtWindow || 'Recente'}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="rh-btn-analyze"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/rh/casos/${item.id}`);
-                        }}
-                      >
-                        <ShieldAlert size={14} />
-                        <span>Analisar Caso</span>
-                        <ArrowRight size={13} className="rh-btn-arrow-small" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {isLoading && (
+        <div className="rh-state" role="status">
+          <RefreshCw size={24} aria-hidden="true" className="rh-spin" />
+          <span>Carregando indicadores…</span>
+        </div>
+      )}
     </div>
   );
-};
+}

@@ -1,408 +1,268 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Search,
-  Filter,
-  ShieldAlert,
-  Eye,
-  RefreshCw,
-  AlertCircle,
   FileText,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  RotateCcw
+  RefreshCw,
+  RotateCcw,
+  Search,
+  ShieldAlert,
 } from 'lucide-react';
-import { fetchAdminCases, updateCaseStatus } from '../../services/rhService';
-import { type AdminCaseItem, CASE_STATUSES } from '../../types/case';
-import { RhCaseCardModal } from '../../components/cases/RhCaseCardModal';
+import { CaseStatusBadge } from '../../components/rh/CaseStatusBadge';
+import { getApiErrorMessage } from '../../services/api';
+import { fetchAdminCases } from '../../services/rhService';
+import {
+  CASE_PRIORITIES,
+  CASE_CATEGORIES,
+  CASE_STATUSES,
+  type AdminCaseItem,
+  type CasePriority,
+  type CaseStatus,
+} from '../../types/case';
 
-export const RhCasesListPage: React.FC = () => {
-  const { id: urlCaseId } = useParams<{ id?: string }>();
+const formatDate = (value?: string, fallback?: string): string => {
+  if (!value) return fallback || 'Não informado';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback || 'Não informado' : date.toLocaleString('pt-BR');
+};
+
+export function RhCasesListPage() {
   const navigate = useNavigate();
-
   const [cases, setCases] = useState<AdminCaseItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Modal de Card Moderno
-  const [manualSelectedCaseId, setManualSelectedCaseId] = useState<string | null>(null);
-  const activeCaseId = urlCaseId || manualSelectedCaseId;
-
-  // Filtros
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('todos');
-  const [selectedCategory, setSelectedCategory] = useState<string>('todas');
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchAdminCases(100);
-      setCases(data);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao carregar a lista de denúncias.';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [selectedStatus, setSelectedStatus] = useState<CaseStatus | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedPriority, setSelectedPriority] = useState<CasePriority | 'all'>('all');
 
   useEffect(() => {
-    let isSubscribed = true;
-    const initLoad = async () => {
+    const controller = new AbortController();
+
+    const loadCases = async () => {
+      setIsLoading(true);
+      setLoadError(null);
+
       try {
-        setError(null);
-        const data = await fetchAdminCases(100);
-        if (isSubscribed) {
-          setCases(data);
+        const result = await fetchAdminCases(100, controller.signal);
+        if (!controller.signal.aborted) {
+          setCases(result);
         }
-      } catch (err: unknown) {
-        if (isSubscribed) {
-          const msg = err instanceof Error ? err.message : 'Erro ao carregar a lista de denúncias.';
-          setError(msg);
+      } catch (error: unknown) {
+        if (!controller.signal.aborted) {
+          setLoadError(getApiErrorMessage(error, 'Não foi possível carregar as denúncias. Tente novamente.'));
         }
       } finally {
-        if (isSubscribed) {
-          setLoading(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
         }
       }
     };
-    void initLoad();
-    return () => {
-      isSubscribed = false;
-    };
-  }, []);
 
-  const handleQuickStatusChange = async (caseId: string, newStatus: string) => {
-    try {
-      setUpdatingId(caseId);
-      await updateCaseStatus(caseId, newStatus);
-      
-      setCases((prev) =>
-        prev.map((c) => (c.id === caseId ? { ...c, status: newStatus as AdminCaseItem['status'] } : c))
-      );
+    void loadCases();
+    return () => controller.abort();
+  }, [refreshVersion]);
 
-      if (selectedStatus !== 'todos' && selectedStatus.toLowerCase() !== newStatus.toLowerCase()) {
-        setSelectedStatus('todos');
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Falha na comunicação com o servidor.';
-      alert('Erro ao atualizar status: ' + msg);
-    } finally {
-      setUpdatingId(null);
-    }
-  };
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR');
+  const filteredCases = cases.filter((item) => {
+    const matchesSearch = !normalizedSearch || [
+      item.id,
+      item.title,
+      item.description,
+      item.category,
+      item.priority,
+    ].some((value) => value?.toLocaleLowerCase('pt-BR').includes(normalizedSearch));
+    const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus;
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchesPriority = selectedPriority === 'all' || item.priority === selectedPriority;
 
-  const openCardModal = (caseId: string) => {
-    setManualSelectedCaseId(caseId);
-    window.history.pushState(null, '', `/rh/casos/${caseId}`);
-  };
-
-  const closeCardModal = () => {
-    setManualSelectedCaseId(null);
-    if (window.location.pathname.startsWith('/rh/casos/')) {
-      navigate('/rh/casos', { replace: true });
-    }
-  };
-
-  // Estatísticas Rápidas
-  const stats = useMemo(() => {
-    const total = cases.length;
-    const pending = cases.filter((c) => c.status === 'Recebido' || c.status === 'Em análise').length;
-    const inProgress = cases.filter((c) => c.status === 'Em investigação' || c.status === 'Aguardando informações').length;
-    const completed = cases.filter((c) => c.status === 'Resolvido' || c.status === 'Encerrado').length;
-    return { total, pending, inProgress, completed };
-  }, [cases]);
-
-  // Dynamic status badge inline styling
-  const getStatusInlineStyle = (status: string) => {
-    switch (status) {
-      case 'Recebido':
-        return { background: 'rgba(59, 130, 246, 0.15)', color: '#60A5FA', borderColor: 'rgba(59, 130, 246, 0.35)' };
-      case 'Em análise':
-        return { background: 'rgba(168, 85, 247, 0.15)', color: '#C084FC', borderColor: 'rgba(168, 85, 247, 0.35)' };
-      case 'Em investigação':
-        return { background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.35)' };
-      case 'Aguardando informações':
-        return { background: 'rgba(56, 189, 248, 0.15)', color: '#38BDF8', borderColor: 'rgba(56, 189, 248, 0.35)' };
-      case 'Resolvido':
-        return { background: 'rgba(16, 185, 129, 0.15)', color: '#34D399', borderColor: 'rgba(16, 185, 129, 0.35)' };
-      case 'Encerrado':
-        return { background: 'rgba(148, 163, 184, 0.15)', color: '#CBD5E1', borderColor: 'rgba(148, 163, 184, 0.35)' };
-      default:
-        return { background: 'rgba(37, 99, 235, 0.15)', color: '#60A5FA', borderColor: 'rgba(96, 165, 250, 0.35)' };
-    }
-  };
-
-  // Filtragem dinâmica
-  const filteredCases = useMemo(() => {
-    return cases.filter((item) => {
-      const matchesSearch =
-        item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus =
-        selectedStatus === 'todos' || item.status.toLowerCase() === selectedStatus.toLowerCase();
-
-      const matchesCategory =
-        selectedCategory === 'todas' || item.category.toLowerCase() === selectedCategory.toLowerCase();
-
-      return matchesSearch && matchesStatus && matchesCategory;
-    });
-  }, [cases, searchTerm, selectedStatus, selectedCategory]);
-
-  const hasActiveFilters = searchTerm !== '' || selectedStatus !== 'todos' || selectedCategory !== 'todas';
+    return matchesSearch && matchesStatus && matchesCategory && matchesPriority;
+  });
+  const hasFilters = Boolean(normalizedSearch) ||
+    selectedStatus !== 'all' ||
+    selectedCategory !== 'all' ||
+    selectedPriority !== 'all';
 
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedStatus('todos');
-    setSelectedCategory('todas');
+    setSelectedStatus('all');
+    setSelectedCategory('all');
+    setSelectedPriority('all');
   };
 
   return (
     <div className="rh-cases-page">
-      {/* Cabeçalho */}
-      <div className="dashboard-page-header">
+      <header className="rh-page-header">
         <div>
-          <h1 className="dashboard-page-title">Gestão e Análise de Denúncias</h1>
+          <h1 className="dashboard-page-title">Gestão de denúncias</h1>
           <p className="dashboard-page-subtitle">
-            Acompanhe, filtre e gerencie o ciclo de investigação de ocorrências corporativas em tempo real.
+            Consulte e localize os até 100 casos mais recentes retornados pela API. Abra um caso para gerenciá-lo.
           </p>
         </div>
-        <button className="rh-btn-refresh" onClick={loadData} disabled={loading}>
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          <span>Atualizar Lista</span>
+        <button
+          type="button"
+          className="rh-button rh-button--secondary"
+          onClick={() => setRefreshVersion((version) => version + 1)}
+          disabled={isLoading}
+        >
+          <RefreshCw size={16} aria-hidden="true" className={isLoading ? 'rh-spin' : ''} />
+          Atualizar lista
         </button>
-      </div>
+      </header>
 
-      {error && (
-        <div className="alert alert-error mb-6">
-          <AlertCircle size={18} />
-          <span>{error}</span>
+      {loadError && (
+        <div className="rh-alert rh-alert--error" role="alert">
+          <ShieldAlert size={18} aria-hidden="true" />
+          <span>{loadError}</span>
+          <button
+            type="button"
+            className="rh-alert__action"
+            onClick={() => setRefreshVersion((version) => version + 1)}
+          >
+            Tentar novamente
+          </button>
         </div>
       )}
 
-      {/* Cards de Métricas / KPI */}
-      <div className="rh-stats-grid mb-6">
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--total">
-            <FileText size={22} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Total Registrado</span>
-            <span className="rh-stat-value">{loading ? '...' : stats.total}</span>
-          </div>
-        </div>
-
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--pending">
-            <Clock size={22} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Em Análise / Triagem</span>
-            <span className="rh-stat-value">{loading ? '...' : stats.pending}</span>
-          </div>
-        </div>
-
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--progress">
-            <ShieldAlert size={22} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Em Investigação</span>
-            <span className="rh-stat-value">{loading ? '...' : stats.inProgress}</span>
-          </div>
-        </div>
-
-        <div className="rh-stat-card">
-          <div className="rh-stat-icon rh-stat-icon--success">
-            <CheckCircle2 size={22} />
-          </div>
-          <div className="rh-stat-content">
-            <span className="rh-stat-label">Concluídos / Resolvidos</span>
-            <span className="rh-stat-value">{loading ? '...' : stats.completed}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Barra de Busca e Filtros */}
-      <div className="rh-filters-bar card-box mb-6">
-        <div className="rh-search-input-wrapper">
-          <Search size={18} className="search-icon" />
+      <section className="rh-panel rh-filter-panel" aria-label="Pesquisa e filtros">
+        <label className="rh-search-field">
+          <span className="rh-visually-hidden">Pesquisar casos</span>
+          <Search size={18} aria-hidden="true" />
           <input
-            type="text"
-            className="rh-search-input"
-            placeholder="Buscar por ID (#código), relato ou categoria..."
+            type="search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar por código, relato ou categoria"
           />
-        </div>
+        </label>
 
-        <div className="rh-filters-group">
-          <div className="rh-filter-item">
-            <Filter size={16} />
-            <select
-              className="rh-select"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="todos">Todos os Status</option>
-              <option value="recebido">Recebido</option>
-              <option value="em análise">Em Análise</option>
-              <option value="em investigação">Em Investigação</option>
-              <option value="aguardando informações">Aguardando Informações</option>
-              <option value="resolvido">Resolvido</option>
-              <option value="encerrado">Encerrado</option>
-            </select>
+        <div className="rh-filter-controls">
+          <div className="rh-filter-controls__fields">
+            <label className="rh-select-field">
+              <span className="rh-visually-hidden">Filtrar por status</span>
+              <select
+                value={selectedStatus}
+                onChange={(event) => {
+                  const status = CASE_STATUSES.find((candidate) => candidate === event.target.value);
+                  setSelectedStatus(status ?? 'all');
+                }}
+              >
+                <option value="all">Todos os status</option>
+                {CASE_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+            </label>
+
+            <label className="rh-select-field">
+              <span className="rh-visually-hidden">Filtrar por categoria</span>
+              <select
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
+              >
+                <option value="all">Todas as categorias</option>
+                {CASE_CATEGORIES.map((category) => <option key={category} value={category}>{category}</option>)}
+              </select>
+            </label>
+
+            <label className="rh-select-field">
+              <span className="rh-visually-hidden">Filtrar por prioridade</span>
+              <select
+                value={selectedPriority}
+                onChange={(event) => {
+                  const priority = CASE_PRIORITIES.find((candidate) => candidate === event.target.value);
+                  setSelectedPriority(priority ?? 'all');
+                }}
+              >
+                <option value="all">Todas as prioridades</option>
+                {CASE_PRIORITIES.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
+              </select>
+            </label>
+
+            {hasFilters && (
+              <button type="button" className="rh-button rh-button--secondary" onClick={resetFilters}>
+                <RotateCcw size={15} aria-hidden="true" />
+                Limpar filtros
+              </button>
+            )}
           </div>
-
-          <div className="rh-filter-item">
-            <select
-              className="rh-select"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="todas">Todas as Categorias</option>
-              <option value="assédio">Assédio</option>
-              <option value="fraude">Fraude</option>
-              <option value="conduta">Desvio de Conduta</option>
-              <option value="sugestão">Sugestão</option>
-              <option value="outro">Outro</option>
-            </select>
-          </div>
-
-          {hasActiveFilters && (
-            <button
-              onClick={resetFilters}
-              className="btn-secondary"
-              style={{ height: '46px', fontSize: '0.82rem', gap: '6px' }}
-              title="Limpar todos os filtros"
-            >
-              <RotateCcw size={14} />
-              <span>Limpar Filtros</span>
-            </button>
-          )}
         </div>
-      </div>
+      </section>
 
-      {/* Tabela de Casos */}
-      <div className="card-box">
-        <div className="flex items-center justify-between mb-4 pb-2 border-b border-subtle">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-heading">Dossiês de Denúncias</h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              {filteredCases.length} {filteredCases.length === 1 ? 'item' : 'itens'}
-            </span>
+      <section className="rh-panel rh-list-panel" aria-labelledby="rh-cases-heading" aria-busy={isLoading}>
+        <header className="rh-panel__header">
+          <div>
+            <h2 id="rh-cases-heading">Denúncias e casos</h2>
+            <p>{filteredCases.length} {filteredCases.length === 1 ? 'resultado' : 'resultados'} na amostra carregada</p>
           </div>
-          {hasActiveFilters && (
-            <span className="text-xs text-muted">
-              Exibindo {filteredCases.length} de {cases.length} denúncias
-            </span>
-          )}
-        </div>
+        </header>
 
-        {loading ? (
-          <div className="py-16 text-center text-gray flex flex-col items-center gap-3">
-            <RefreshCw size={28} className="animate-spin text-primary mx-auto mb-2" />
-            <span className="text-sm font-medium">Carregando denúncias e ocorrências...</span>
+        {isLoading ? (
+          <div className="rh-state" role="status">
+            <RefreshCw size={24} aria-hidden="true" className="rh-spin" />
+            <span>Carregando denúncias…</span>
+          </div>
+        ) : loadError && cases.length === 0 ? (
+          <div className="rh-state">
+            <ShieldAlert size={28} aria-hidden="true" />
+            <p>{loadError}</p>
           </div>
         ) : filteredCases.length === 0 ? (
-          <div className="py-16 text-center text-gray flex flex-col items-center gap-3">
-            <XCircle size={42} className="mx-auto text-muted opacity-50" />
-            <p className="text-base font-semibold text-heading">Nenhuma denúncia encontrada para os filtros selecionados.</p>
-            {hasActiveFilters && (
-              <button onClick={resetFilters} className="rh-btn-refresh mt-2">
-                Limpar Filtros de Busca
+          <div className="rh-state">
+            <FileText size={28} aria-hidden="true" />
+            <p>{hasFilters ? 'Nenhum caso corresponde aos filtros.' : 'Nenhum caso foi encontrado.'}</p>
+            {hasFilters && (
+              <button type="button" className="rh-button rh-button--secondary" onClick={resetFilters}>
+                Limpar filtros
               </button>
             )}
           </div>
         ) : (
-          <div className="table-responsive">
-            <table className="rh-table">
+          <div className="rh-table-scroll" role="region" aria-label="Lista de casos" tabIndex={0}>
+            <table className="rh-data-table rh-data-table--cases">
               <thead>
                 <tr>
-                  <th>Código do Caso</th>
-                  <th>Categoria</th>
-                  <th>Relato do Colaborador</th>
-                  <th>Status Atual</th>
-                  <th>Janela de Registro</th>
-                  <th style={{ textAlign: 'right' }}>Ações de Análise</th>
+                  <th scope="col">Identificador</th>
+                  <th scope="col">Categoria</th>
+                  <th scope="col">Resumo</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Prioridade</th>
+                  <th scope="col">Registrado em</th>
+                  <th scope="col">Atualizado em</th>
+                  <th scope="col"><span className="rh-visually-hidden">Detalhes</span></th>
                 </tr>
               </thead>
               <tbody>
-                {filteredCases.map((item) => {
-                  const inlineStyle = getStatusInlineStyle(item.status);
-                  return (
-                    <tr 
-                      key={item.id} 
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => openCardModal(item.id)}
-                    >
-                      <td>
-                        <span className="font-mono font-bold text-primary px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs">
-                          #{item.id.substring(0, 8)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="category-pill">{item.category}</span>
-                      </td>
-                      <td className="max-w-md">
-                        <p className="line-clamp-2 text-sm text-heading font-medium" title={item.description || item.content}>
-                          {item.description || item.content || item.title || 'Sem descrição.'}
-                        </p>
-                      </td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <select
-                          className="rh-status-select-inline"
-                          style={inlineStyle}
-                          value={item.status}
-                          disabled={updatingId === item.id}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            handleQuickStatusChange(item.id, e.target.value);
-                          }}
-                        >
-                          {CASE_STATUSES.map((st) => (
-                            <option key={st} value={st}>
-                              {st}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="text-sm text-muted font-medium">{item.createdAtWindow || 'Recente'}</td>
-                      <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                {filteredCases.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <span className="rh-case-code">#{item.id.slice(0, 8)}</span>
+                    </td>
+                    <td>{item.category}</td>
+                    <td className="rh-table-summary" title={item.description || item.content}>
+                      {item.description || item.content || item.title || 'Sem descrição.'}
+                    </td>
+                    <td><CaseStatusBadge status={item.status} /></td>
+                    <td>{item.priority || 'Não classificada'}</td>
+                    <td>{formatDate(item.createdAt, item.createdAtWindow)}</td>
+                    <td>{formatDate(item.updatedAt)}</td>
+                    <td>
+                      <div className="rh-table-actions">
                         <button
-                          className="rh-btn-details-chat"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openCardModal(item.id);
-                          }}
+                          type="button"
+                          className="rh-icon-button"
+                          aria-label={`Abrir detalhes do caso ${item.id.slice(0, 8)}`}
+                          onClick={() => navigate(`/rh/cases/${encodeURIComponent(item.id)}`)}
                         >
-                          <Eye size={15} />
-                          <span>Detalhes & Chat</span>
+                          <FileText size={16} aria-hidden="true" />
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
-
-      {/* Card Modal Moderno */}
-      <RhCaseCardModal
-        isOpen={!!activeCaseId}
-        caseId={activeCaseId}
-        onClose={closeCardModal}
-        onStatusUpdated={handleQuickStatusChange}
-      />
+      </section>
     </div>
   );
-};
-
+}

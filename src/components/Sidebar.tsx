@@ -11,8 +11,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const role = localStorage.getItem('@SafeLine:role');
-  const email = localStorage.getItem('@SafeLine:email') || '';
-  const isAdmin = role === 'Admin' || role === 'HR' || email.startsWith('rh@') || email.startsWith('admin@') || email.includes('adm');
+  const isManagementRole = role === 'Admin' || role === 'HR';
 
   const getMenuClassName = (path: string) =>
     `sidebar-link${location.pathname === path ? ' is-active' : ''}${isCollapsed ? ' is-collapsed' : ''}`;
@@ -34,12 +33,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   return (
     <aside className={`dashboard-sidebar${isCollapsed ? ' is-collapsed' : ''}`}>
       <nav className="sidebar-nav" aria-label="Navegação principal">
-        {isAdmin ? (
+        {isManagementRole ? (
           <>
+            <Link className={getMenuClassName('/rh/dashboard')} to="/rh/dashboard" title="Painel RH">
+              <Home size={18} aria-hidden="true" /> {!isCollapsed && <span>Painel RH</span>}
+            </Link>
             <Link className={getMenuClassName('/rh/cases')} to="/rh/cases" title="Gestão de Denúncias">
               <Shield size={18} aria-hidden="true" /> {!isCollapsed && <span>Gestão de Denúncias</span>}
             </Link>
-            <Link className={getMenuClassName('/mensagens')} to="/mensagens" title="Mensagens">
+            <Link className={getMenuClassName('/rh/mensagens')} to="/rh/mensagens" title="Mensagens">
               <MessageSquare size={18} aria-hidden="true" /> {!isCollapsed && <span>Mensagens</span>}
             </Link>
             <Link className={getMenuClassName('/orientacoes')} to="/orientacoes" title="Orientações">
@@ -94,5 +96,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     </aside>
   );
 };
-
 

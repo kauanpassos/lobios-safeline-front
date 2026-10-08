@@ -37,6 +37,8 @@ A aplicação também disponibiliza uma área autenticada para consulta das den�
 | React Router 7 | Navegação e roteamento SPA |
 | CSS | Estilos, temas e layout responsivo |
 | Lucide React | Ícones da interface |
+| GSAP / ScrollTrigger | Animações progressivas nas orientações do colaborador |
+| Driver.js | Tour guiado de integração do colaborador |
 | Cloudflare Turnstile | Proteção contra automação e bots, com validação no backend |
 | Vitest | Execução dos testes automatizados |
 | ESLint | Análise estática e padronização do código |
@@ -67,6 +69,15 @@ A aplicação também disponibiliza uma área autenticada para consulta das den�
 - Controle de acesso conforme permissões definidas pelo backend.
 - Envio do token de sessão utilizando `Authorization: Bearer`.
 - Logout e remoção da sessão local.
+
+### Área RH
+
+- Dashboard com distribuição real dos casos por status e categoria e evolução mensal quando há períodos suficientes.
+- Indicadores limitados aos até 100 casos mais recentes retornados pela API; os números não representam totais históricos.
+- Gestão de denúncias em modo de consulta, com busca e filtros por status, categoria e prioridade.
+- Detalhes operacionais com contexto do relato, classificação, status, atribuições, anexos e histórico de alterações de status.
+- Comunicação centralizada na rota `/rh/mensagens`; a tabela de gestão não oferece um segundo atalho para o chat.
+- Orientações específicas para o trabalho do RH em `/orientacoes`.
 
 ## Estrutura do projeto
 

@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeCaseDescription,
   normalizeCaseTitle,
+  parseAdminCaseItems,
   parseCaseDetailsResponse,
+  parseCaseMessageItems,
+  parseCaseStatusHistoryItems,
   parseMyCaseApiItems,
   parseCreateCaseResponse,
 } from './case';
@@ -47,11 +50,9 @@ describe('case.ts - Parsers e Normalizadores', () => {
       expect(result[0].priority).toBeNull();
     });
 
-    it('deve usar o fallback "Recebido" para status desconhecidos sem quebrar a lista', () => {
+    it('deve rejeitar status desconhecidos em vez de apresentá-los como recebidos', () => {
       const payload = [{ ...mockValidCaseItem, status: 'StatusBizarroInexistente' }];
-      const result = parseMyCaseApiItems(payload);
-      
-      expect(result[0].status).toBe('Recebido');
+      expect(() => parseMyCaseApiItems(payload)).toThrow('Invalid case status.');
     });
 
     it('deve lançar erro se o payload não for um array', () => {
@@ -76,12 +77,90 @@ describe('case.ts - Parsers e Normalizadores', () => {
     const result = parseCaseDetailsResponse({
       id: 'case-1',
       category: 'Fraude',
+      title: 'Relato de fraude',
+      description: 'Descrição do relato',
       status: 'Recebido',
       priority: null,
       createdAt: '2026-01-01T00:00:00Z',
     });
 
     expect(result.priority).toBeNull();
+  });
+
+  it('deve rejeitar detalhes sem informações essenciais, sem inventar valores', () => {
+    expect(() => parseCaseDetailsResponse({ id: 'case-1' })).toThrow(
+      'Resposta de detalhes da denúncia inválida.'
+    );
+  });
+
+  it('deve validar os casos administrativos sem fabricar registros', () => {
+    const parsed = parseAdminCaseItems([{
+      id: 'case-1',
+      categoryId: 'fraude',
+      title: 'Relato',
+      description: 'Descrição',
+      status: 'Recebido',
+      createdAtWindow: 'Hoje',
+      priority: 'Alta',
+      updatedAt: '2026-10-07T10:00:00.000Z',
+      assignedUserIds: ['rh-1', 'rh-2'],
+    }]);
+
+    expect(parsed[0].id).toBe('case-1');
+    expect(parsed[0].category).toBe('Fraude');
+    expect(parsed[0].priority).toBe('Alta');
+    expect(parsed[0].updatedAt).toBe('2026-10-07T10:00:00.000Z');
+    expect(parsed[0].assignedUserIds).toEqual(['rh-1', 'rh-2']);
+    expect(() => parseAdminCaseItems([{ categoryId: 'fraude' }])).toThrow('Invalid admin case item response.');
+  });
+
+  it('deve carregar casos legados com entidades HTML numéricas na categoria', () => {
+    const parsed = parseAdminCaseItems([{
+      id: 'case-legacy',
+      categoryId: 'ass&#233;dio',
+      title: 'Relato',
+      description: 'Descrição',
+      status: 'Recebido',
+      createdAtWindow: 'Hoje',
+      createdAt: '2026-10-07T10:00:00.000Z',
+      assignedUserIds: [],
+    }]);
+
+    expect(parsed[0].category).toBe('Assédio');
+  });
+
+  it('deve aceitar mensagens somente quando pertencem ao caso solicitado', () => {
+    const message = {
+      id: 'message-1',
+      caseId: 'case-1',
+      senderUserId: 'hr-1',
+      senderRole: 'HR',
+      content: 'Recebemos seu relato.',
+      createdAt: '2026-10-07T10:00:00.000Z',
+    };
+    const [parsed] = parseCaseMessageItems([message], 'case-1');
+
+    expect(parsed?.isFromAdmin).toBe(true);
+    expect(parsed?.senderName).toBe('Equipe de RH');
+    expect(() => parseCaseMessageItems([message], 'case-2')).toThrow('Invalid case message response.');
+  });
+
+  it('deve validar e normalizar o histórico de status recebido da API', () => {
+    const parsed = parseCaseStatusHistoryItems([{
+      id: 'history-1',
+      previousStatus: 'Nova',
+      newStatus: 'Em análise',
+      createdAt: '2026-10-07T10:00:00.000Z',
+    }]);
+
+    expect(parsed[0].previousStatus).toBe('Recebido');
+    expect(parsed[0].newStatus).toBe('Em análise');
+    expect(() => parseCaseStatusHistoryItems([{
+      id: 'history-invalid',
+      previousStatus: 'Recebido',
+      newStatus: 'Resolvido',
+      createdAt: 'data inválida',
+    }])).toThrow('Invalid case status history item response.');
   });
 
   it('deve normalizar espaços do assunto e do relato sem juntar parágrafos', () => {
