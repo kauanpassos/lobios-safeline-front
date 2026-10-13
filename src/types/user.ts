@@ -9,6 +9,32 @@ export interface UserProfile {
   joinedAt: string;
 }
 
+export interface HrAssignee {
+  id: string;
+  name: string;
+}
+
+export const parseHrAssigneeOptions = (payload: unknown): HrAssignee[] => {
+  if (!Array.isArray(payload)) {
+    throw new Error('Resposta inválida ao pesquisar responsáveis.');
+  }
+
+  return payload.map((item) => {
+    if (
+      typeof item !== 'object' ||
+      item === null ||
+      !('id' in item) ||
+      typeof item.id !== 'string' ||
+      !('name' in item) ||
+      typeof item.name !== 'string'
+    ) {
+      throw new Error('Resposta inválida ao pesquisar responsável.');
+    }
+
+    return { id: item.id, name: item.name };
+  });
+};
+
 const normalizeRole = (value: unknown): UserRole => {
   if (value === 'Admin' || value === 'HR') {
     return value;

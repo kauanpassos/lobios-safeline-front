@@ -156,6 +156,21 @@ const parseStringArray = (value: unknown): string[] => {
   return value;
 };
 
+const parseAssignedUsers = (value: unknown): { id: string; name: string }[] | undefined => {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) throw new Error('Invalid assigned users response.');
+
+  const assignedUsers: { id: string; name: string }[] = [];
+  for (const user of value) {
+    if (!isRecord(user) || !isString(user.id) || !isString(user.name)) {
+      throw new Error('Invalid assigned users response.');
+    }
+    assignedUsers.push({ id: user.id, name: user.name });
+  }
+
+  return assignedUsers;
+};
+
 export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
   if (!Array.isArray(payload)) {
     throw new Error('Invalid cases response.');
@@ -259,6 +274,7 @@ export interface AdminCaseItem {
   updatedAt?: string;
   priority: CasePriority | null;
   assignedUserIds: string[];
+  assignedUsers?: { id: string; name: string }[];
 }
 
 export interface CaseStatusHistoryItem {
@@ -325,6 +341,7 @@ export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
       updatedAt: isString(item.updatedAt) ? item.updatedAt : undefined,
       priority: normalizePriority(item.priority),
       assignedUserIds: parseStringArray(item.assignedUserIds),
+      assignedUsers: parseAssignedUsers(item.assignedUsers),
     };
   });
 };
@@ -360,6 +377,7 @@ export const parseAdminCaseDetailResponse = (payload: unknown): AdminCaseItem =>
     updatedAt: isString(payload.updatedAt) ? payload.updatedAt : undefined,
     priority: normalizePriority(payload.priority),
     assignedUserIds: parseStringArray(payload.assignedUserIds),
+    assignedUsers: parseAssignedUsers(payload.assignedUsers),
   };
 };
 

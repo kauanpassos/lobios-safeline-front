@@ -125,6 +125,8 @@ Requisitos: Node.js e npm.
    npm run dev
    ```
 
+   O servidor local do Vite sempre usa a API de desenvolvimento em `http://localhost:5016`, mesmo que `VITE_API_URL` esteja configurada para outro ambiente. Para usar a API de produção, a aplicação precisa ser executada em um build de produção com `VITE_API_URL` configurada.
+
 ## Scripts
 
 ```bash

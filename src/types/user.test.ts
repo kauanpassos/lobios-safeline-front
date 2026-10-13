@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseUserProfileResponse } from './user';
+import { parseHrAssigneeOptions, parseUserProfileResponse } from './user';
 
 describe('user.ts - Parsers do Usuário', () => {
   const mockValidUser = {
@@ -35,6 +35,17 @@ describe('user.ts - Parsers do Usuário', () => {
       const result = parseUserProfileResponse(userWithoutDept);
       expect(result.department).toBeUndefined();
       expect(result.id).toBe('user-001');
+    });
+  });
+
+  describe('parseHrAssigneeOptions', () => {
+    it('deve validar sugestões de responsáveis', () => {
+      expect(parseHrAssigneeOptions([{ id: 'rh-1', name: 'Ana Silva' }])).toEqual([
+        { id: 'rh-1', name: 'Ana Silva' },
+      ]);
+      expect(() => parseHrAssigneeOptions([{ id: 'rh-1' }])).toThrow(
+        'Resposta inválida ao pesquisar responsável.'
+      );
     });
   });
 });

@@ -11,6 +11,7 @@ import {
   type CaseMessageItem,
   type CaseAttachmentItem,
 } from '../types/case';
+import { parseHrAssigneeOptions, type HrAssignee } from '../types/user';
 
 export async function fetchAdminCases(limit = 50, signal?: AbortSignal): Promise<AdminCaseItem[]> {
   return apiFetch<AdminCaseItem[]>(
@@ -69,6 +70,14 @@ export async function assignCase(caseId: string, userId: string): Promise<void> 
       body: JSON.stringify({ userId }),
     },
     parseEmptyResponse
+  );
+}
+
+export async function searchHrAssignees(search: string, signal?: AbortSignal): Promise<HrAssignee[]> {
+  return apiFetch<HrAssignee[]>(
+    `api/v1/admin/users?search=${encodeURIComponent(search)}`,
+    { method: 'GET', signal },
+    parseHrAssigneeOptions
   );
 }
 

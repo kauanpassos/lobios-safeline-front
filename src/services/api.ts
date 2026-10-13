@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5016';
+const DEVELOPMENT_API_URL = 'http://localhost:5016';
+const API_BASE_URL = import.meta.env.DEV
+  ? DEVELOPMENT_API_URL
+  : import.meta.env.VITE_API_URL || DEVELOPMENT_API_URL;
 const TOKEN_STORAGE_KEY = '@SafeLine:token';
 
 export type ResponseParser<T> = (payload: unknown) => T;

@@ -22,6 +22,7 @@ import {
   fetchCaseStatusHistory,
   updateCasePriority,
   updateCaseStatus,
+  searchHrAssignees,
 } from '../../services/rhService';
 import {
   CASE_PRIORITIES,
@@ -32,6 +33,7 @@ import {
   type CaseStatus,
   type CaseStatusHistoryItem,
 } from '../../types/case';
+import type { HrAssignee } from '../../types/user';
 
 type Feedback = { type: 'success' | 'error'; text: string };
 
@@ -64,11 +66,42 @@ export function RhCaseDetailsPage() {
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [assignedUser, setAssignedUser] = useState('');
+  const [selectedAssignee, setSelectedAssignee] = useState<HrAssignee | null>(null);
+  const [assigneeSuggestions, setAssigneeSuggestions] = useState<HrAssignee[]>([]);
+  const [isSearchingAssignees, setIsSearchingAssignees] = useState(false);
+  const [assigneeSearchError, setAssigneeSearchError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [loadedCaseId, setLoadedCaseId] = useState<string | null>(null);
   const [loadedRefreshVersion, setLoadedRefreshVersion] = useState(-1);
   const feedbackCaseIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const search = assignedUser.trim();
+    if (search.length < 2 || selectedAssignee?.name === search) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      void searchHrAssignees(search, controller.signal)
+        .then(setAssigneeSuggestions)
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setAssigneeSuggestions([]);
+            setAssigneeSearchError('Não foi possível pesquisar responsáveis. Tente novamente.');
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsSearchingAssignees(false);
+        });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [assignedUser, selectedAssignee]);
 
   useEffect(() => {
     if (!id) return;
@@ -87,6 +120,10 @@ export function RhCaseDetailsPage() {
       if (caseResult.status === 'fulfilled') {
         setCaseItem(caseResult.value);
         setAssignedUser('');
+        setSelectedAssignee(null);
+        setAssigneeSuggestions([]);
+        setIsSearchingAssignees(false);
+        setAssigneeSearchError(null);
         setDetailError(null);
       } else {
         setDetailError(getLoadError(caseResult.reason, 'os detalhes do caso'));
@@ -166,18 +203,28 @@ export function RhCaseDetailsPage() {
 
   const handleAssignUser = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const userId = assignedUser.trim();
-    if (!id || !caseItem || !userId || caseItem.assignedUserIds.includes(userId)) return;
+    const assignee = selectedAssignee;
+    if (
+      !id ||
+      !caseItem ||
+      !assignee ||
+      caseItem.assignedUserIds.includes(assignee.id)
+    ) return;
 
     setIsAssigning(true);
     setFeedback(null);
 
     try {
-      await assignCase(id, userId);
+      await assignCase(id, assignee.id);
       setCaseItem((current) => current
-        ? { ...current, assignedUserIds: [...current.assignedUserIds, userId] }
+        ? {
+            ...current,
+            assignedUserIds: [...current.assignedUserIds, assignee.id],
+            assignedUsers: [...(current.assignedUsers ?? []), assignee],
+          }
         : current);
       setAssignedUser('');
+      setSelectedAssignee(null);
       setFeedback({ type: 'success', text: 'Responsável adicionado ao caso.' });
       setRefreshVersion((version) => version + 1);
     } catch (error: unknown) {
@@ -185,7 +232,7 @@ export function RhCaseDetailsPage() {
         type: 'error',
         text: error instanceof ApiError && error.status === 403
           ? 'Sua conta não tem permissão para atribuir este caso.'
-          : 'Não foi possível salvar o responsável. Confira o identificador informado.',
+          : 'Não foi possível salvar o responsável selecionado. Tente novamente.',
       });
     } finally {
       setIsAssigning(false);
@@ -456,25 +503,71 @@ export function RhCaseDetailsPage() {
                 <span className="rh-field__current">
                   <UserRound size={15} aria-hidden="true" />
                   {caseItem.assignedUserIds.length > 0
-                    ? caseItem.assignedUserIds.join(', ')
+                    ? caseItem.assignedUserIds
+                      .map((userId) => caseItem.assignedUsers?.find((user) => user.id === userId)?.name ?? userId)
+                      .join(', ')
                     : 'Nenhum responsável atribuído'}
                 </span>
               </div>
               <label className="rh-field" htmlFor="rh-assignee">
-                <span>Identificador da conta</span>
+                <span>Buscar responsável de RH</span>
                 <input
                   id="rh-assignee"
                   type="text"
                   value={assignedUser}
-                  onChange={(event) => setAssignedUser(event.target.value)}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setAssignedUser(value);
+                    setSelectedAssignee(null);
+                    setAssigneeSuggestions([]);
+                    setIsSearchingAssignees(value.trim().length >= 2);
+                    setAssigneeSearchError(null);
+                  }}
                   autoComplete="off"
-                  placeholder="Informe o ID de uma conta"
+                  placeholder="Digite o nome ou e-mail"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={assigneeSuggestions.length > 0}
+                  aria-controls="rh-assignee-options"
                 />
               </label>
+              {isSearchingAssignees && <span className="rh-inline-loading" role="status">Pesquisando responsáveis…</span>}
+              {assigneeSearchError && <span className="rh-inline-error" role="alert">{assigneeSearchError}</span>}
+              {assigneeSuggestions.length > 0 && (
+                <ul id="rh-assignee-options" className="rh-assignee-options" role="listbox" aria-label="Responsáveis encontrados">
+                  {assigneeSuggestions.map((assignee) => (
+                    <li key={assignee.id}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={selectedAssignee?.id === assignee.id}
+                        disabled={caseItem.assignedUserIds.includes(assignee.id)}
+                        onClick={() => {
+                          setSelectedAssignee(assignee);
+                          setAssignedUser(assignee.name);
+                          setAssigneeSuggestions([]);
+                          setIsSearchingAssignees(false);
+                        }}
+                      >
+                        <UserRound size={15} aria-hidden="true" />
+                        <span>{assignee.name}</span>
+                        {caseItem.assignedUserIds.includes(assignee.id) && <small>Já atribuído</small>}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {assignedUser.trim().length >= 2 &&
+                !selectedAssignee &&
+                !isSearchingAssignees &&
+                !assigneeSearchError &&
+                assigneeSuggestions.length === 0 && (
+                  <span className="rh-inline-loading" role="status">Nenhum responsável encontrado.</span>
+                )}
               <button
                 type="submit"
                 className="rh-button rh-button--primary"
-                disabled={isAssigning || !assignedUser.trim() || caseItem.assignedUserIds.includes(assignedUser.trim())}
+                disabled={isAssigning || !selectedAssignee || caseItem.assignedUserIds.includes(selectedAssignee.id)}
               >
                 {isAssigning ? 'Atribuindo…' : 'Adicionar responsável'}
               </button>
