@@ -25,6 +25,10 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
   const validate = (dataToValidate: RegisterFormData): boolean => {
     const newErrors: Partial<RegisterFormData> = {};
 
+    if (!dataToValidate.name.trim()) {
+      newErrors.name = 'O nome é obrigatório';
+    }
+
     if (!dataToValidate.email) {
       newErrors.email = 'O e-mail é obrigatório';
     } else if (!/\S+@\S+\.\S+/.test(dataToValidate.email)) {
@@ -114,12 +118,17 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess }) => {
       <Input
         id="register-name"
         type="text"
-        label="Nome completo (Opcional)"
-        placeholder="Seu nome (pode ser omitido)"
+        label="Nome completo"
+        placeholder="Seu nome completo"
         icon={<User size={18} />}
         value={formData.name}
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        helperText="Opcional: seu nome não será revelado nas denúncias"
+        onChange={(e) => {
+          setFormData({ ...formData, name: e.target.value });
+          if (errors.name) setErrors({ ...errors, name: undefined });
+        }}
+        error={errors.name}
+        helperText="Seu nome é necessário para criar a conta e não será exibido nas denúncias."
+        required
       />
 
       <Input

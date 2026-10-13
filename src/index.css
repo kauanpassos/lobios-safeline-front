@@ -1339,6 +1339,13 @@ body {
 .rh-case-actions > .rh-field { margin-bottom: var(--space-4); }
 .rh-assignment-form { display: grid; gap: var(--space-3); margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
 .rh-assignment-form .rh-field + .rh-field { margin-top: 0; }
+.rh-assignee-options { display: grid; max-height: 220px; overflow-y: auto; margin: calc(var(--space-2) * -1) 0 0; padding: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-surface); list-style: none; }
+.rh-assignee-options button { display: flex; width: 100%; min-height: 40px; align-items: center; gap: var(--space-2); padding: 8px 10px; color: var(--color-text-secondary); border: 0; border-radius: var(--radius-sm); background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.rh-assignee-options button:hover:not(:disabled),
+.rh-assignee-options button:focus-visible { color: var(--color-text-primary); background: var(--bg-elevated); outline: none; }
+.rh-assignee-options button:disabled { opacity: 0.58; cursor: not-allowed; }
+.rh-assignee-options button span { flex: 1; }
+.rh-assignee-options button small { color: var(--color-text-muted); font-size: 0.72rem; }
 .rh-inline-loading { display: inline-flex; margin-top: var(--space-2); color: var(--color-text-muted); font-size: 0.78rem; }
 .rh-inline-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--color-error-text); font-size: 0.84rem; }
 .rh-case-history__empty { color: var(--color-text-muted); font-size: 0.84rem; }
