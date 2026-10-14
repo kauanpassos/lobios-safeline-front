@@ -62,7 +62,7 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
       ...options,
       headers,
     });
-    
+
     const responseText = await response.text();
     let data: unknown;
 
@@ -107,7 +107,27 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions, parseR
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;
     }
-    
+
     throw new Error('Erro de conexão. Verifique sua internet ou tente mais tarde.', { cause: error });
   }
 }
+
+// Objeto api para uso padrão de métodos REST (get, post, put, delete) similar ao Axios
+export const api = {
+  get: async <T>(path: string, options?: ApiFetchOptions) => {
+    const data = await apiFetch<T>(path, { ...options, method: 'GET' }, (d) => d as T);
+    return { data };
+  },
+  post: async <T>(path: string, body?: unknown, options?: ApiFetchOptions) => {
+    const data = await apiFetch<T>(path, { ...options, method: 'POST', body: JSON.stringify(body) }, (d) => d as T);
+    return { data };
+  },
+  put: async <T>(path: string, body?: unknown, options?: ApiFetchOptions) => {
+    const data = await apiFetch<T>(path, { ...options, method: 'PUT', body: JSON.stringify(body) }, (d) => d as T);
+    return { data };
+  },
+  delete: async <T>(path: string, options?: ApiFetchOptions) => {
+    const data = await apiFetch<T>(path, { ...options, method: 'DELETE' }, (d) => d as T);
+    return { data };
+  }
+};

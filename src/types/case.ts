@@ -441,7 +441,8 @@ export const parseCaseMessageItems = (payload: unknown, expectedCaseId: string):
         : isString(item.userId)
           ? item.userId
           : '';
-    const isFromAdmin = senderRole === 'Admin' || senderRole === 'HR';
+    const normalizedSenderRole = senderRole.toLowerCase();
+    const isFromAdmin = normalizedSenderRole === 'admin' || normalizedSenderRole === 'hr' || normalizedSenderRole === 'hr_manager';
 
     return {
       id: item.id,

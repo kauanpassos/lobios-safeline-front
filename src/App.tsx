@@ -34,7 +34,7 @@ function App() {
   const handleLoginSuccess = (_email?: string, role?: string) => {
     setIsAuthenticated(true);
     const userRole = role || localStorage.getItem('@SafeLine:role');
-    const isManagementRole = userRole === 'Admin' || userRole === 'HR';
+    const isManagementRole = userRole === 'Admin' || userRole === 'HR' || userRole === 'HR_MANAGER';
 
     if (isManagementRole) {
       navigate('/rh/cases');
@@ -54,7 +54,7 @@ function App() {
   // Rotas Privadas (Colaborador / RH)
   if (isAuthenticated) {
     const role = localStorage.getItem('@SafeLine:role');
-    const isManagementRole = role === 'Admin' || role === 'HR';
+    const isManagementRole = role === 'Admin' || role === 'HR' || role === 'HR_MANAGER';
     const defaultRedirect = isManagementRole ? '/rh/cases' : '/my-cases';
 
     return (
@@ -66,13 +66,19 @@ function App() {
           <Route path="/rh/cases/:id" element={isManagementRole ? <RhCaseDetailsPage /> : <Navigate to={defaultRedirect} replace />} />
           <Route path="/rh/casos/:id" element={isManagementRole ? <RhCaseDetailsPage /> : <Navigate to={defaultRedirect} replace />} />
           <Route path="/rh/mensagens" element={isManagementRole ? <RhMessagesPage /> : <Navigate to={defaultRedirect} replace />} />
+          <Route path="/rh/mensagens/:caseId" element={isManagementRole ? <RhMessagesPage /> : <Navigate to={defaultRedirect} replace />} />
+          
           <Route path="/my-cases" element={<MyCasesPage />} />
           <Route path="/my-cases/:id" element={<CaseDetailsPage />} /> 
           <Route path="/new-report" element={<CreateCasePage onBack={() => navigate(defaultRedirect)} />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/guidelines" element={isManagementRole ? <RhGuidelinesPage /> : <GuidelinesPage />} />
           <Route path="/orientacoes" element={isManagementRole ? <RhGuidelinesPage /> : <GuidelinesPage />} />
+          
           <Route path="/mensagens" element={<CaseChatPage />} />
+          {/* Nova Rota Adicionada: Permite carregar o chat com o ID do caso específico */}
+          <Route path="/mensagens/:caseId" element={<CaseChatPage />} />
+          
           <Route path="*" element={<Navigate to={defaultRedirect} replace />} />
         </Routes>
       </DashboardLayout>

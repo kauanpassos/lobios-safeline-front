@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AlertTriangle, MessageSquare, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, MessageSquare, RefreshCw, Send, Shield } from 'lucide-react';
 import { CaseStatusBadge } from '../../components/rh/CaseStatusBadge';
 import { ApiError } from '../../services/api';
 import { fetchAdminCases, fetchCaseMessages, sendCaseMessage } from '../../services/rhService';
+import { useChatConnection } from '../../hooks/useChatConnection';
 import type { AdminCaseItem, CaseMessageItem } from '../../types/case';
 
 const MAX_MESSAGE_LENGTH = 5000;
@@ -29,6 +30,8 @@ export function RhMessagesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCaseId = searchParams.get('caseId') ?? '';
   const selectedCaseIdRef = useRef(selectedCaseId);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [cases, setCases] = useState<AdminCaseItem[]>([]);
   const [messagesResult, setMessagesResult] = useState<MessagesResult | null>(null);
   const [isLoadingCases, setIsLoadingCases] = useState(true);
@@ -40,10 +43,23 @@ export function RhMessagesPage() {
   const [casesRefreshVersion, setCasesRefreshVersion] = useState(0);
   const [messagesRefreshVersion, setMessagesRefreshVersion] = useState(0);
 
+  const token = localStorage.getItem('@SafeLine:token');
+
+  // Atualiza a referência do case selecionado
   useEffect(() => {
     selectedCaseIdRef.current = selectedCaseId;
   }, [selectedCaseId]);
 
+  // Rolagem automática para a última mensagem
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messagesResult?.messages]);
+
+  // Carregamento da lista de Casos (Lado Esquerdo)
   useEffect(() => {
     const controller = new AbortController();
 
@@ -71,6 +87,7 @@ export function RhMessagesPage() {
     return () => controller.abort();
   }, [casesRefreshVersion]);
 
+  // Dados do caso e das mensagens atuais
   const selectedCase = cases.find((item) => item.id === selectedCaseId) ?? null;
   const currentMessagesResult = messagesResult?.caseId === selectedCaseId &&
     messagesResult.refreshVersion === messagesRefreshVersion
@@ -80,6 +97,59 @@ export function RhMessagesPage() {
   const messagesError = currentMessagesResult?.error ?? null;
   const isLoadingMessages = Boolean(selectedCaseId && selectedCase && !casesError && !currentMessagesResult);
 
+  type IncomingChatMessage = Partial<CaseMessageItem> & {
+    senderRole?: string;
+    senderName?: string;
+    senderUserId?: string;
+    senderId?: string;
+    content?: string;
+    createdAt?: string;
+    id?: string;
+  };
+
+  // Callback de recebimento via SignalR
+  const handleMessageReceived = useCallback((incomingMessage: IncomingChatMessage) => {
+    setMessagesResult((current) => {
+      if (!current || current.caseId !== selectedCaseIdRef.current) return current;
+
+      const incomingCreatedAt = incomingMessage.createdAt ?? new Date().toISOString();
+      const messageContent = incomingMessage.content ?? '';
+      const senderRole = incomingMessage.senderRole ?? '';
+      const isIncomingFromAdmin = ['admin', 'hr', 'hr_manager'].includes(senderRole.toLowerCase());
+
+      const exists = current.messages.some(
+        (m) =>
+          m.id === incomingMessage.id ||
+          (m.content === messageContent &&
+            Math.abs(new Date(m.createdAt).getTime() - new Date(incomingCreatedAt).getTime()) < 2000)
+      );
+
+      if (exists) return current;
+
+      const newMessage: CaseMessageItem = {
+        ...incomingMessage,
+        id: incomingMessage.id ?? `${selectedCaseIdRef.current}-${Date.now()}`,
+        caseId: selectedCaseIdRef.current,
+        content: messageContent,
+        createdAt: incomingCreatedAt,
+        senderRole,
+        isFromAdmin: isIncomingFromAdmin,
+        senderName: incomingMessage.senderName || (isIncomingFromAdmin ? 'Equipe de Análise' : 'Colaborador'),
+        senderId: incomingMessage.senderId ?? incomingMessage.senderUserId ?? '',
+      };
+
+      return { ...current, messages: [...current.messages, newMessage] };
+    });
+  }, []);
+
+  // Hook de Conexão em Tempo Real
+  const { isConnected, isReconnecting, connectionError } = useChatConnection({
+    caseId: selectedCaseId,
+    token,
+    onMessageReceived: handleMessageReceived,
+  });
+
+  // Carregamento do histórico REST do caso (Lado Direito)
   useEffect(() => {
     if (!selectedCaseId || isLoadingCases || casesError || !selectedCase) return;
 
@@ -114,6 +184,7 @@ export function RhMessagesPage() {
     return () => controller.abort();
   }, [selectedCaseId, selectedCase, isLoadingCases, casesError, messagesRefreshVersion]);
 
+  // Ação de selecionar um caso na lista
   const selectCase = (caseId: string) => {
     selectedCaseIdRef.current = caseId;
     setMessageText('');
@@ -122,6 +193,7 @@ export function RhMessagesPage() {
     setSearchParams(caseId ? { caseId } : {}, { replace: false });
   };
 
+  // Envio de mensagem
   const handleSendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const content = messageText.trim();
@@ -135,10 +207,13 @@ export function RhMessagesPage() {
 
     try {
       const createdMessage = await sendCaseMessage(sendingCaseId, content);
+      
+      // Adiciona ao estado otimisticamente
       setMessagesResult((current) => current?.caseId === sendingCaseId &&
         current.refreshVersion === sendingRefreshVersion
         ? { ...current, messages: [...current.messages, createdMessage] }
         : current);
+        
       if (selectedCaseIdRef.current === sendingCaseId) {
         setMessageText('');
         setSendFeedback('Mensagem enviada.');
@@ -181,6 +256,7 @@ export function RhMessagesPage() {
       </header>
 
       <div className="rh-message-layout">
+        {/* LADO ESQUERDO: LISTA DE CASOS */}
         <aside className="rh-panel rh-case-list" aria-labelledby="rh-message-cases-heading">
           <header className="rh-panel__header">
             <div>
@@ -236,7 +312,8 @@ export function RhMessagesPage() {
           )}
         </aside>
 
-        <section className="rh-panel rh-message-panel" aria-labelledby="rh-message-panel-heading">
+        {/* LADO DIREITO: CHAT E MENSAGENS */}
+        <section className="rh-panel rh-message-panel" aria-labelledby="rh-message-panel-heading" style={{ display: 'flex', flexDirection: 'column' }}>
           {!selectedCaseId ? (
             <div className="rh-state rh-message-empty">
               <MessageSquare size={32} aria-hidden="true" />
@@ -266,70 +343,99 @@ export function RhMessagesPage() {
             </div>
           ) : (
             <>
-              <header className="rh-message-panel__header">
+              {/* CABEÇALHO DO CHAT COM STATUS SIGNALR */}
+              <header className="rh-message-panel__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h2 id="rh-message-panel-heading">{selectedCase.title || selectedCase.category}</h2>
                   <p>
                     Caso #{selectedCase.id.slice(0, 8)} · {selectedCase.category} · {selectedCase.status}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="rh-button rh-button--secondary"
-                  onClick={() => setMessagesRefreshVersion((version) => version + 1)}
-                  disabled={isLoadingMessages}
-                >
-                  <RefreshCw size={15} aria-hidden="true" /> Atualizar histórico
-                </button>
-              </header>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#64748B' }}>
+                    <span style={{
+                        width: '8px', height: '8px', borderRadius: '50%',
+                        backgroundColor: isConnected ? '#10B981' : isReconnecting ? '#F59E0B' : '#EF4444',
+                        animation: isReconnecting ? 'pulse 1.5s infinite' : 'none'
+                      }} 
+                    />
+                    {isConnected ? 'Online' : isReconnecting ? 'Reconectando...' : 'Offline'}
+                  </div>
 
-              {messagesError ? (
-                <div className="rh-state rh-message-error" role="alert">
-                  <AlertTriangle size={22} aria-hidden="true" />
-                  <p>{messagesError}</p>
                   <button
                     type="button"
                     className="rh-button rh-button--secondary"
                     onClick={() => setMessagesRefreshVersion((version) => version + 1)}
+                    disabled={isLoadingMessages}
                   >
-                    Tentar novamente
+                    <RefreshCw size={15} aria-hidden="true" /> Atualizar
                   </button>
                 </div>
-              ) : messages.length === 0 ? (
-                <div className="rh-state rh-message-history-empty">
-                  <MessageSquare size={24} aria-hidden="true" />
-                  <p>Nenhuma mensagem neste caso. Você pode iniciar a conversa abaixo.</p>
+              </header>
+
+              {/* ALERTA DE ERRO DE CONEXÃO SIGNALR */}
+              {connectionError && (
+                <div style={{ backgroundColor: '#FEF2F2', color: '#B91C1C', padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #FCA5A5' }}>
+                  <Shield size={14} />
+                  Aviso: {connectionError} As mensagens recebidas podem sofrer atrasos.
                 </div>
-              ) : (
-                <ol className="rh-message-history" aria-label={`Histórico do caso ${selectedCase.id.slice(0, 8)}`} aria-live="polite">
-                  {messages.map((message) => (
-                    <li
-                      key={message.id}
-                      className={`rh-message${message.isFromAdmin ? ' rh-message--staff' : ' rh-message--collaborator'}`}
-                    >
-                      <div className="rh-message__meta">
-                        <strong>{message.senderName || 'Colaborador'}</strong>
-                        <time dateTime={message.createdAt}>
-                          {new Date(message.createdAt).toLocaleString('pt-BR')}
-                        </time>
-                      </div>
-                      <p>{message.content}</p>
-                    </li>
-                  ))}
-                </ol>
               )}
 
+              {/* ÁREA DO HISTÓRICO */}
+              <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px' }}>
+                {messagesError ? (
+                  <div className="rh-state rh-message-error" role="alert">
+                    <AlertTriangle size={22} aria-hidden="true" />
+                    <p>{messagesError}</p>
+                    <button
+                      type="button"
+                      className="rh-button rh-button--secondary"
+                      onClick={() => setMessagesRefreshVersion((version) => version + 1)}
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="rh-state rh-message-history-empty">
+                    <MessageSquare size={24} aria-hidden="true" />
+                    <p>Nenhuma mensagem neste caso. Você pode iniciar a conversa abaixo.</p>
+                  </div>
+                ) : (
+                  <ol className="rh-message-history" aria-label={`Histórico do caso ${selectedCase.id.slice(0, 8)}`} aria-live="polite">
+                    {messages.map((message) => (
+                      <li
+                        key={message.id}
+                        className={`rh-message${message.isFromAdmin ? ' rh-message--staff' : ' rh-message--collaborator'}`}
+                      >
+                        <div className="rh-message__meta">
+                          <strong>{message.senderName || (message.isFromAdmin ? 'Equipe de Análise' : 'Colaborador')}</strong>
+                          <time dateTime={message.createdAt}>
+                            {new Date(message.createdAt).toLocaleString('pt-BR')}
+                          </time>
+                        </div>
+                        <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+                      </li>
+                    ))}
+                    {/* Elemento âncora para a rolagem */}
+                    <div ref={messagesEndRef} />
+                  </ol>
+                )}
+              </div>
+
+              {/* ÁREA DE ENVIO */}
               {messagesError === null && (
                 <form className="rh-message-composer" onSubmit={(event) => void handleSendMessage(event)}>
                   {sendFeedback && <p className="rh-message-composer__success" role="status">{sendFeedback}</p>}
                   {sendError && <p className="rh-message-composer__error" role="alert">{sendError}</p>}
-                  <label htmlFor="rh-message-content">Nova mensagem</label>
+                  <label htmlFor="rh-message-content" className="sr-only">Nova mensagem</label>
                   <textarea
                     id="rh-message-content"
                     value={messageText}
                     onChange={(event) => {
                       setMessageText(event.target.value);
                       setSendError(null);
+                      setSendFeedback(null);
                     }}
                     maxLength={MAX_MESSAGE_LENGTH}
                     rows={3}
