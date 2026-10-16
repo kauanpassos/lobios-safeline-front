@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, BookOpen, User, LogOut, ChevronLeft, ChevronRight, MessageSquare, Shield } from 'lucide-react';
+import { Home, PlusCircle, BookOpen, User, LogOut, ChevronLeft, ChevronRight, MessageSquare, Shield, KeyRound } from 'lucide-react';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -11,7 +11,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const role = localStorage.getItem('@SafeLine:role');
-  const isManagementRole = role === 'Admin' || role === 'HR' || role === 'HR_MANAGER';
+  const isManagementRole = role === 'ADMIN' || role === 'HR' || role === 'HR_ADMIN';
+  const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN';
 
   const getMenuClassName = (path: string) =>
     `sidebar-link${location.pathname === path ? ' is-active' : ''}${isCollapsed ? ' is-collapsed' : ''}`;
@@ -44,6 +45,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
             <Link className={getMenuClassName('/rh/mensagens')} to="/rh/mensagens" title="Mensagens">
               <MessageSquare size={18} aria-hidden="true" /> {!isCollapsed && <span>Mensagens</span>}
             </Link>
+            {canManageClaims && (
+              <Link className={getMenuClassName('/rh/acessos')} to="/rh/acessos" title="Acessos e permissões">
+                <KeyRound size={18} aria-hidden="true" /> {!isCollapsed && <span>Acessos e permissões</span>}
+              </Link>
+            )}
             <Link className={getMenuClassName('/orientacoes')} to="/orientacoes" title="Orientações">
               <BookOpen size={18} aria-hidden="true" /> {!isCollapsed && <span>Orientações</span>}
             </Link>
@@ -96,4 +102,3 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     </aside>
   );
 };
-

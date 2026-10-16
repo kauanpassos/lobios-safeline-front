@@ -10,7 +10,7 @@ type TabType = typeof TABS[number];
 
 export const MyCasesPage: React.FC = () => {
   const navigate = useNavigate();
-  const canViewPriority = ['Admin', 'HR', 'HR_MANAGER'].includes(
+  const canViewPriority = ['ADMIN', 'HR', 'HR_ADMIN'].includes(
     localStorage.getItem('@SafeLine:role') ?? ''
   );
   const [cases, setCases] = useState<CaseSummary[]>([]);

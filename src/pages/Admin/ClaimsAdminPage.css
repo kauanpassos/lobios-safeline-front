@@ -1,0 +1,316 @@
+.claims-admin {
+  color: #e8eef8;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.claims-admin__header,
+.claims-admin__panel-heading,
+.claims-admin__pagination,
+.claims-admin__assignments li {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.claims-admin__header h1,
+.claims-admin__panel-heading h2 {
+  margin: 4px 0;
+}
+
+.claims-admin__header p,
+.claims-admin__panel-heading p,
+.claims-admin__muted {
+  color: #9babc2;
+  margin: 4px 0 0;
+}
+
+.claims-admin__eyebrow {
+  align-items: center;
+  color: #8fbaff;
+  display: flex;
+  font-size: .78rem;
+  font-weight: 700;
+  gap: 7px;
+  letter-spacing: .04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.claims-admin__layout {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+}
+
+.claims-admin__panel {
+  background: rgba(15, 27, 45, .88);
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 14px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.claims-admin__search,
+.claims-admin__grant {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.claims-admin input,
+.claims-admin select {
+  background: #0b1626;
+  border: 1px solid #34445b;
+  border-radius: 8px;
+  color: #e8eef8;
+  min-height: 40px;
+  padding: 8px 11px;
+}
+
+.claims-admin__search input {
+  flex: 1;
+  min-width: 130px;
+}
+
+.claims-admin__grant select {
+  flex: 1;
+  min-width: 160px;
+}
+
+.claims-admin__button {
+  align-items: center;
+  background: #2563eb;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: .86rem;
+  gap: 7px;
+  justify-content: center;
+  min-height: 38px;
+  padding: 7px 12px;
+}
+
+.claims-admin__button:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+.claims-admin__button--secondary {
+  background: transparent;
+  border-color: #42536c;
+}
+
+.claims-admin__button--danger {
+  background: transparent;
+  border-color: rgba(248, 113, 113, .55);
+  color: #fecaca;
+}
+
+.claims-admin__users,
+.claims-admin__assignments,
+.claims-admin__effective,
+.claims-admin__audit {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.claims-admin__users {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.claims-admin__user {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px;
+  text-align: left;
+  width: 100%;
+}
+
+.claims-admin__user:hover,
+.claims-admin__user.is-selected {
+  background: rgba(37, 99, 235, .13);
+  border-color: rgba(96, 165, 250, .48);
+}
+
+.claims-admin__user span,
+.claims-admin__user small,
+.claims-admin__assignments small,
+.claims-admin__audit span,
+.claims-admin__audit time {
+  color: #9babc2;
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+
+.claims-admin__user small {
+  color: #a9c8fa;
+}
+
+.claims-admin__pagination {
+  border-top: 1px solid rgba(148, 163, 184, .14);
+  color: #9babc2;
+  font-size: .82rem;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.claims-admin__state {
+  align-items: center;
+  color: #aab8cb;
+  display: flex;
+  gap: 9px;
+  justify-content: center;
+  min-height: 90px;
+}
+
+.claims-admin__state--empty {
+  flex-direction: column;
+  min-height: 260px;
+  text-align: center;
+}
+
+.claims-admin__state--empty h2 {
+  color: #e8eef8;
+  margin: 4px 0 0;
+}
+
+.claims-admin__state--empty p {
+  color: #9babc2;
+  max-width: 400px;
+}
+
+.claims-admin__details {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.claims-admin__section {
+  border-top: 1px solid rgba(148, 163, 184, .16);
+  padding-top: 16px;
+}
+
+.claims-admin__section h3 {
+  font-size: .98rem;
+  margin: 0 0 12px;
+}
+
+.claims-admin__assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.claims-admin__assignments li {
+  background: rgba(2, 8, 23, .36);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.claims-admin__assignments li > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.claims-admin__effective {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.claims-admin__effective li {
+  background: rgba(37, 99, 235, .13);
+  border: 1px solid rgba(96, 165, 250, .28);
+  border-radius: 999px;
+  color: #c4dcff;
+  font-size: .78rem;
+  padding: 6px 9px;
+}
+
+.claims-admin__audit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.claims-admin__audit li {
+  border-left: 2px solid #3b82f6;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px 0 3px 12px;
+}
+
+.claims-admin__notice {
+  align-items: center;
+  border-radius: 9px;
+  display: flex;
+  gap: 9px;
+  margin: 0;
+  padding: 11px 14px;
+}
+
+.claims-admin__notice--error {
+  background: rgba(239, 68, 68, .12);
+  color: #fecaca;
+}
+
+.claims-admin__notice--success {
+  background: rgba(34, 197, 94, .11);
+  color: #bbf7d0;
+}
+
+.claims-admin__visually-hidden {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.claims-admin__spin {
+  animation: claims-admin-spin 1s linear infinite;
+}
+
+@keyframes claims-admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+  .claims-admin__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .claims-admin__header,
+  .claims-admin__panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .claims-admin__pagination {
+    flex-wrap: wrap;
+  }
+}

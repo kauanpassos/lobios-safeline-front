@@ -442,7 +442,7 @@ export const parseCaseMessageItems = (payload: unknown, expectedCaseId: string):
           ? item.userId
           : '';
     const normalizedSenderRole = senderRole.toLowerCase();
-    const isFromAdmin = normalizedSenderRole === 'admin' || normalizedSenderRole === 'hr' || normalizedSenderRole === 'hr_manager';
+    const isFromAdmin = normalizedSenderRole === 'admin' || normalizedSenderRole === 'hr' || normalizedSenderRole === 'hr_admin';
 
     return {
       id: item.id,

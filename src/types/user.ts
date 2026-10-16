@@ -1,4 +1,4 @@
-export type UserRole = 'Admin' | 'User' | 'HR' | 'HR_MANAGER';
+export type UserRole = 'COLLABORATOR' | 'HR' | 'HR_ADMIN' | 'ADMIN';
 
 export interface UserProfile {
   id: string;
@@ -36,11 +36,11 @@ export const parseHrAssigneeOptions = (payload: unknown): HrAssignee[] => {
 };
 
 const normalizeRole = (value: unknown): UserRole => {
-  if (value === 'Admin' || value === 'HR' || value === 'HR_MANAGER') {
+  if (value === 'COLLABORATOR' || value === 'HR' || value === 'HR_ADMIN' || value === 'ADMIN') {
     return value;
   }
 
-  return 'User';
+  return 'COLLABORATOR';
 };
 
 export const parseUserProfileResponse = (data: unknown): UserProfile => {

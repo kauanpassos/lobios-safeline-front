@@ -15,6 +15,7 @@ import { RhCaseDetailsPage } from './pages/RH/RhCaseDetailsPage';
 import { RhDashboardPage } from './pages/RH/RhDashboardPage';
 import { RhMessagesPage } from './pages/RH/RhMessagesPage';
 import { RhGuidelinesPage } from './pages/RH/RhGuidelinesPage';
+import { ClaimsAdminPage } from './pages/Admin/ClaimsAdminPage';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -23,6 +24,9 @@ function App() {
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      localStorage.removeItem('@SafeLine:token');
+      localStorage.removeItem('@SafeLine:role');
+      localStorage.removeItem('@SafeLine:email');
       setIsAuthenticated(false);
       navigate('/');
     };
@@ -34,7 +38,7 @@ function App() {
   const handleLoginSuccess = (_email?: string, role?: string) => {
     setIsAuthenticated(true);
     const userRole = role || localStorage.getItem('@SafeLine:role');
-    const isManagementRole = userRole === 'Admin' || userRole === 'HR' || userRole === 'HR_MANAGER';
+    const isManagementRole = userRole === 'ADMIN' || userRole === 'HR_ADMIN' || userRole === 'HR';
 
     if (isManagementRole) {
       navigate('/rh/cases');
@@ -54,7 +58,8 @@ function App() {
   // Rotas Privadas (Colaborador / RH)
   if (isAuthenticated) {
     const role = localStorage.getItem('@SafeLine:role');
-    const isManagementRole = role === 'Admin' || role === 'HR' || role === 'HR_MANAGER';
+    const isManagementRole = role === 'ADMIN' || role === 'HR_ADMIN' || role === 'HR';
+    const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN';
     const defaultRedirect = isManagementRole ? '/rh/cases' : '/my-cases';
 
     return (
@@ -67,6 +72,8 @@ function App() {
           <Route path="/rh/casos/:id" element={isManagementRole ? <RhCaseDetailsPage /> : <Navigate to={defaultRedirect} replace />} />
           <Route path="/rh/mensagens" element={isManagementRole ? <RhMessagesPage /> : <Navigate to={defaultRedirect} replace />} />
           <Route path="/rh/mensagens/:caseId" element={isManagementRole ? <RhMessagesPage /> : <Navigate to={defaultRedirect} replace />} />
+          <Route path="/rh/acessos" element={canManageClaims ? <ClaimsAdminPage /> : <Navigate to={defaultRedirect} replace />} />
+          <Route path="/admin/claims" element={canManageClaims ? <Navigate to="/rh/acessos" replace /> : <Navigate to={defaultRedirect} replace />} />
           
           <Route path="/my-cases" element={<MyCasesPage />} />
           <Route path="/my-cases/:id" element={<CaseDetailsPage />} /> 

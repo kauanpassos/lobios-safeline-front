@@ -87,7 +87,7 @@ export const GuidelinesPage: React.FC = () => {
 
   useEffect(() => {
     const role = localStorage.getItem('@SafeLine:role');
-    if (!['User', 'Collaborator', 'COLLABORATOR'].includes(role ?? '')) {
+    if (role !== 'COLLABORATOR') {
       return;
     }
 

@@ -24,10 +24,10 @@ describe('user.ts - Parsers do Usuário', () => {
       expect(() => parseUserProfileResponse(userWithoutName)).toThrow('Nome do usuário inválido ou ausente.');
     });
 
-    it('deve retornar User para role não mapeada', () => {
+    it('deve retornar COLLABORATOR para role não mapeada', () => {
       const userWithInvalidRole = { ...mockValidUser, role: 'Hacker Supremo' };
       const result = parseUserProfileResponse(userWithInvalidRole);
-      expect(result.role).toBe('User');
+      expect(result.role).toBe('COLLABORATOR');
     });
 
     it('deve processar normalmente mesmo se "department" estiver ausente (é opcional)', () => {
