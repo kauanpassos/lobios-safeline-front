@@ -180,7 +180,7 @@ export function CaseChatPage() {
           ) : (
             messages.map((msg, index) => {
               const senderRole = (msg.senderRole ?? '').toLowerCase();
-              const isHr = senderRole === 'hr' || senderRole === 'hr_manager' || senderRole === 'admin';
+              const isHr = senderRole === 'hr' || senderRole === 'hr_admin' || senderRole === 'admin';
               return (
                 <div key={msg.id || index} style={{ display: 'flex', flexDirection: 'column', alignItems: isHr ? 'flex-start' : 'flex-end', width: '100%' }}>
                   <div style={{

@@ -5,6 +5,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from '@microsoft/signalr';
+import { API_BASE_URL } from '../services/api';
 
 export interface CaseMessage {
   id?: string;
@@ -33,7 +34,7 @@ const getStoredToken = (fallbackToken?: string | null) => {
 export function useChatConnection({
   caseId,
   token,
-  baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseUrl = API_BASE_URL,
   onMessageReceived,
 }: UseChatConnectionOptions) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -112,6 +113,12 @@ export function useChatConnection({
         }
       });
 
+      connection.on('AuthorizationRevoked', () => {
+        setConnectionError('Suas permissões foram alteradas. Entre novamente para continuar.');
+        window.dispatchEvent(new Event('safeline:unauthorized'));
+        void connection.stop();
+      });
+
       await connection.start();
       await connection.invoke('JoinCaseGroup', caseId);
 
@@ -140,6 +147,7 @@ export function useChatConnection({
       const conn = connectionRef.current;
       if (conn) {
         conn.off('ReceiveMessage');
+        conn.off('AuthorizationRevoked');
 
         if (conn.state === HubConnectionState.Connected && caseId) {
           conn

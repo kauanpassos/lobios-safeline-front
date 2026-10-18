@@ -115,7 +115,7 @@ export function RhMessagesPage() {
       const incomingCreatedAt = incomingMessage.createdAt ?? new Date().toISOString();
       const messageContent = incomingMessage.content ?? '';
       const senderRole = incomingMessage.senderRole ?? '';
-      const isIncomingFromAdmin = ['admin', 'hr', 'hr_manager'].includes(senderRole.toLowerCase());
+      const isIncomingFromAdmin = ['admin', 'hr', 'hr_admin'].includes(senderRole.toLowerCase());
 
       const exists = current.messages.some(
         (m) =>
