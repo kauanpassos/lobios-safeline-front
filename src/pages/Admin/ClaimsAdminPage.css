@@ -297,6 +297,51 @@
   to { transform: rotate(360deg); }
 }
 
+.claims-admin__save-action {
+  margin-top: 14px;
+}
+
+.claims-admin__draft-alert {
+  align-items: center;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.claims-admin__draft-info {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.claims-admin__draft-icon {
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.claims-admin__draft-title {
+  color: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.claims-admin__draft-desc {
+  color: #93c5fd;
+  font-size: 0.82rem;
+  margin: 2px 0 0;
+}
+
+.claims-admin__draft-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 @media (max-width: 900px) {
   .claims-admin__layout {
     grid-template-columns: 1fr;

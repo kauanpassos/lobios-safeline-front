@@ -11,8 +11,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const role = localStorage.getItem('@SafeLine:role');
-  const isManagementRole = role === 'ADMIN' || role === 'HR' || role === 'HR_ADMIN';
-  const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN';
+  const isManagementRole = role === 'ADMIN' || role === 'HR' || role === 'HR_ADMIN' || role === 'HR_MANAGER';
+  const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN' || role === 'HR_MANAGER';
 
   const getMenuClassName = (path: string) =>
     `sidebar-link${location.pathname === path ? ' is-active' : ''}${isCollapsed ? ' is-collapsed' : ''}`;

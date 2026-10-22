@@ -30,7 +30,7 @@ export interface ClaimsAuditEntry {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const allowedRoles: readonly UserRole[] = ['COLLABORATOR', 'HR', 'HR_ADMIN', 'ADMIN'];
+const allowedRoles: readonly UserRole[] = ['COLLABORATOR', 'HR', 'HR_ADMIN', 'HR_MANAGER', 'ADMIN'];
 const allowedPermissions: readonly ApplicationPermission[] = [
   'cases.read.all',
   'cases.status.manage',
@@ -42,6 +42,8 @@ const allowedPermissions: readonly ApplicationPermission[] = [
   'attachments.read',
   'attachments.upload',
   'attachments.delete',
+  'claims.roles.manage',
+  'claims.permissions.manage',
 ];
 
 const isAllowedRole = (value: unknown): value is UserRole =>
