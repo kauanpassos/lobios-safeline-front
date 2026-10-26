@@ -10,7 +10,9 @@ export type ApplicationPermission =
   | 'messages.write'
   | 'attachments.read'
   | 'attachments.upload'
-  | 'attachments.delete';
+  | 'attachments.delete'
+  | 'claims.roles.manage'
+  | 'claims.permissions.manage';
 export interface LoginFormData {
   email: string;
   password: string;
@@ -42,7 +44,7 @@ export interface LoginResponse {
 }
 
 const isUserRole = (value: unknown): value is UserRole =>
-  value === 'COLLABORATOR' || value === 'HR' || value === 'HR_ADMIN' || value === 'ADMIN';
+  value === 'COLLABORATOR' || value === 'HR' || value === 'HR_ADMIN' || value === 'HR_MANAGER' || value === 'ADMIN';
 
 const isApplicationPermission = (value: unknown): value is ApplicationPermission =>
   value === 'cases.read.all' ||
@@ -54,7 +56,9 @@ const isApplicationPermission = (value: unknown): value is ApplicationPermission
   value === 'messages.write' ||
   value === 'attachments.read' ||
   value === 'attachments.upload' ||
-  value === 'attachments.delete';
+  value === 'attachments.delete' ||
+  value === 'claims.roles.manage' ||
+  value === 'claims.permissions.manage';
 
 export const parseLoginResponse = (payload: unknown): LoginResponse => {
   if (typeof payload !== 'object' || payload === null || !('token' in payload) || typeof payload.token !== 'string') {

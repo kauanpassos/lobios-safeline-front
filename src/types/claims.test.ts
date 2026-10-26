@@ -10,7 +10,12 @@ describe('claims administration parsers', () => {
         email: 'user@example.test',
         roles: ['COLLABORATOR'],
         permissions: [],
-        effectivePermissions: ['messages.read', 'messages.write'],
+        effectivePermissions: [
+          'messages.read',
+          'messages.write',
+          'claims.roles.manage',
+          'claims.permissions.manage',
+        ],
       }],
       page: 1,
       pageSize: 20,
@@ -54,5 +59,4 @@ describe('claims administration parsers', () => {
     );
   });
 });
-
 

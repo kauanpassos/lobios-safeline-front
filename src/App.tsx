@@ -38,7 +38,7 @@ function App() {
   const handleLoginSuccess = (_email?: string, role?: string) => {
     setIsAuthenticated(true);
     const userRole = role || localStorage.getItem('@SafeLine:role');
-    const isManagementRole = userRole === 'ADMIN' || userRole === 'HR_ADMIN' || userRole === 'HR';
+    const isManagementRole = userRole === 'ADMIN' || userRole === 'HR_ADMIN' || userRole === 'HR_MANAGER' || userRole === 'HR';
 
     if (isManagementRole) {
       navigate('/rh/cases');
@@ -58,8 +58,8 @@ function App() {
   // Rotas Privadas (Colaborador / RH)
   if (isAuthenticated) {
     const role = localStorage.getItem('@SafeLine:role');
-    const isManagementRole = role === 'ADMIN' || role === 'HR_ADMIN' || role === 'HR';
-    const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN';
+    const isManagementRole = role === 'ADMIN' || role === 'HR_ADMIN' || role === 'HR_MANAGER' || role === 'HR';
+    const canManageClaims = role === 'ADMIN' || role === 'HR_ADMIN' || role === 'HR_MANAGER';
     const defaultRedirect = isManagementRole ? '/rh/cases' : '/my-cases';
 
     return (
