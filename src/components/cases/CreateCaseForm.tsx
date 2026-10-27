@@ -94,7 +94,7 @@ export const CreateCaseForm = ({
               onCategoryChange(value);
             }
           }}
-          className="create-case-control"
+          className="create-case-control create-case-select"
         >
           <option value="" disabled>Selecione o tipo de denúncia...</option>
           <option value="assédio">Assédio</option>

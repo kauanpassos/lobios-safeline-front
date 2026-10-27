@@ -1,4 +1,7 @@
 .claims-admin {
+  width: min(1340px, 100%);
+  margin: 0 auto;
+  padding: 36px 40px 60px;
   color: #e8eef8;
   display: flex;
   flex-direction: column;

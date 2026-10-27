@@ -120,6 +120,7 @@ describe('SelectableChips search and filter logic', () => {
 describe('SelectableChips single exclusive selection logic', () => {
   it('replaces the current selection with the new single option', () => {
     const currentSelection = ['COLLABORATOR'];
+    expect(currentSelection).toContain('COLLABORATOR');
     const newRole = 'HR';
     const nextSelection = [newRole];
 

@@ -1,3 +1,9 @@
+import { decodeHtmlEntities } from '../utils/htmlEntities';
+import { formatProtocolCode } from '../utils/protocol';
+
+export { decodeHtmlEntities } from '../utils/htmlEntities';
+export { formatProtocolCode } from '../utils/protocol';
+
 export const CASE_STATUSES = [
   'Recebido',
   'Em análise',
@@ -24,17 +30,9 @@ const isOneOf = <T extends string>(values: readonly T[], value: string): value i
 export const isCaseCategoryId = (value: string): value is CaseCategoryId =>
   isOneOf(CASE_CATEGORY_IDS, value);
 
-const decodeNumericHtmlEntities = (value: string): string =>
-  value.replace(/&#(?:x([0-9a-f]+)|([0-9]+));/gi, (entity, hexadecimal: string | undefined, decimal: string | undefined) => {
-    const codePoint = Number.parseInt(hexadecimal ?? decimal ?? '', hexadecimal ? 16 : 10);
-    return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
-      ? String.fromCodePoint(codePoint)
-      : entity;
-  });
-
 export const normalizeCategory = (value: unknown): CaseCategory => {
   if (typeof value !== 'string') throw new Error('Invalid case category.');
-  const normalizedValue = decodeNumericHtmlEntities(value);
+  const normalizedValue = decodeHtmlEntities(value);
 
   const categories: Record<CaseCategoryId, CaseCategory> = {
     assédio: 'Assédio',
@@ -103,6 +101,7 @@ export interface CreateCaseResponse {
 
 export interface CaseSummary {
   id: string;
+  protocol: string;
   category: CaseCategory;
   title: string;
   description: string;
@@ -113,6 +112,7 @@ export interface CaseSummary {
 
 export interface MyCaseApiItem {
   id: string;
+  protocol: string;
   category: CaseCategory;
   title?: string;
   description?: string;
@@ -123,6 +123,7 @@ export interface MyCaseApiItem {
 
 export interface CaseDetails {
   id: string;
+  protocol: string;
   category: CaseCategory;
   title: string;
   description: string;
@@ -198,15 +199,18 @@ export const parseMyCaseApiItems = (payload: unknown): MyCaseApiItem[] => {
     }
 
     const id = record.id;
+    const protocolValue = isString(record.protocol) ? record.protocol : undefined;
+    const protocol = formatProtocolCode(protocolValue || record.id);
     const category = normalizeCategory(categoryValue);
     const status = normalizeStatus(record.status);
     const priority = normalizePriority(record.priority);
     const createdAt = record.createdAt;
-    const description = isString(descriptionValue) ? descriptionValue : '';
-    const title = titleValue || description;
+    const description = decodeHtmlEntities(isString(descriptionValue) ? descriptionValue : '');
+    const title = decodeHtmlEntities(titleValue || description);
 
     return {
       id,
+      protocol,
       category,
       title,
       description,
@@ -229,20 +233,30 @@ export const parseCaseDetailsResponse = (payload: unknown): CaseDetails => {
     throw new Error('Resposta de detalhes da denúncia inválida.');
   }
 
-  const title = isString(payload.title)
+  const rawTitle = isString(payload.title)
     ? payload.title
     : isString(payload.description)
       ? payload.description
       : payload.content;
-  if (!isString(title) || !title.trim()) {
+  if (!isString(rawTitle) || !rawTitle.trim()) {
     throw new Error('Resposta de detalhes da denúncia inválida.');
   }
 
+  const rawDescription = isString(payload.description)
+    ? payload.description
+    : isString(payload.content)
+      ? payload.content
+      : '';
+
+  const protocolValue = isString(payload.protocol) ? payload.protocol : undefined;
+  const protocol = formatProtocolCode(protocolValue || payload.id);
+
   return {
     id: payload.id,
+    protocol,
     category: normalizeCategory(payload.category ?? payload.categoryId),
-    title,
-    description: isString(payload.description) ? payload.description : (isString(payload.content) ? payload.content : ''),
+    title: decodeHtmlEntities(rawTitle),
+    description: decodeHtmlEntities(rawDescription),
     status: normalizeStatus(payload.status),
     priority: normalizePriority(payload.priority),
     createdAt: payload.createdAt,
@@ -268,6 +282,8 @@ export interface AdminCaseItem {
   title?: string;
   description?: string;
   content: string;
+  protocolCode?: string;
+  publicProtocolHash?: string;
   status: CaseStatus;
   createdAtWindow?: string;
   createdAt?: string;
@@ -328,13 +344,18 @@ export const parseAdminCaseItems = (payload: unknown): AdminCaseItem[] => {
       throw new Error('Invalid admin case item response.');
     }
 
+    const decodedTitle = decodeHtmlEntities(item.title);
+    const decodedDescription = decodeHtmlEntities(item.description);
+
     return {
       id: item.id,
       categoryId: item.categoryId,
       category: normalizeCategory(item.categoryId),
-      title: item.title,
-      description: item.description,
-      content: item.description,
+      title: decodedTitle,
+      description: decodedDescription,
+      content: decodedDescription,
+      protocolCode: isString(item.protocolCode) ? item.protocolCode : undefined,
+      publicProtocolHash: isString(item.publicProtocolHash) ? item.publicProtocolHash : undefined,
       status: normalizeStatus(item.status),
       createdAtWindow: item.createdAtWindow,
       createdAt: isString(item.createdAt) ? item.createdAt : undefined,
@@ -364,13 +385,19 @@ export const parseAdminCaseDetailResponse = (payload: unknown): AdminCaseItem =>
     throw new Error('Invalid admin case details response.');
   }
 
+  const decodedTitle = decodeHtmlEntities(payload.title);
+  const decodedDescription = decodeHtmlEntities(payload.description);
+  const content = isString(payload.content) ? decodeHtmlEntities(payload.content) : decodedDescription;
+
   return {
     id: payload.id,
     categoryId: payload.categoryId,
     category: normalizeCategory(payload.categoryId),
-    title: payload.title,
-    description: payload.description,
-    content: isString(payload.content) ? payload.content : payload.description,
+    title: decodedTitle,
+    description: decodedDescription,
+    content,
+    protocolCode: isString(payload.protocolCode) ? payload.protocolCode : undefined,
+    publicProtocolHash: isString(payload.publicProtocolHash) ? payload.publicProtocolHash : undefined,
     status: normalizeStatus(payload.status),
     createdAtWindow: payload.createdAtWindow,
     createdAt: payload.createdAt,

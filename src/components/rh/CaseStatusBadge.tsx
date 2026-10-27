@@ -14,8 +14,11 @@ interface CaseStatusBadgeProps {
 }
 
 export function CaseStatusBadge({ status }: CaseStatusBadgeProps) {
+  const modifier = STATUS_MODIFIERS[status] || 'received';
+
   return (
-    <span className={`rh-status-badge rh-status-badge--${STATUS_MODIFIERS[status]}`}>
+    <span className={`rh-status-badge rh-status-badge--${modifier}`}>
+      <span className="rh-status-badge__dot" aria-hidden="true" />
       {status}
     </span>
   );

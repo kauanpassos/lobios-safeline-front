@@ -34,6 +34,7 @@ import {
   type CaseStatusHistoryItem,
 } from '../../types/case';
 import type { HrAssignee } from '../../types/user';
+import { decodeHtmlEntities } from '../../utils/htmlEntities';
 
 type Feedback = { type: 'success' | 'error'; text: string };
 
@@ -286,7 +287,8 @@ export function RhCaseDetailsPage() {
     );
   }
 
-  const reportText = caseItem.description || caseItem.content || 'O relato não possui descrição.';
+  const protocolCode = caseItem.protocolCode || caseItem.publicProtocolHash || `#${caseItem.id.slice(0, 8)}`;
+  const reportText = decodeHtmlEntities(caseItem.description || caseItem.content || 'O relato não possui descrição.');
 
   return (
     <div className="rh-case-details-page">
@@ -324,15 +326,15 @@ export function RhCaseDetailsPage() {
 
       <section className="rh-panel rh-case-identity" aria-labelledby="rh-case-title">
         <div>
-          <span className="rh-case-code">#{caseItem.id.slice(0, 8)}</span>
+          <span className="rh-case-code">{protocolCode}</span>
           <span className="rh-category">{caseItem.category}</span>
-          <h1 id="rh-case-title">{caseItem.title || `Caso ${caseItem.id.slice(0, 8)}`}</h1>
+          <h1 id="rh-case-title">{decodeHtmlEntities(caseItem.title || `Protocolo ${protocolCode}`)}</h1>
           <p>Registrado em {formatDate(caseItem.createdAt)}</p>
         </div>
         <div className="rh-case-identity__state">
           <CaseStatusBadge status={caseItem.status} />
           {caseItem.priority && (
-            <span className="rh-priority-badge" data-priority={caseItem.priority}>
+            <span className={`rh-priority-badge rh-priority-badge--${caseItem.priority.toLowerCase()}`} data-priority={caseItem.priority}>
               Prioridade {caseItem.priority.toLocaleLowerCase('pt-BR')}
             </span>
           )}
