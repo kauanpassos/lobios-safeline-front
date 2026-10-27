@@ -158,18 +158,12 @@ export const GuidelinesPage: React.FC = () => {
         </div>
       </header>
 
-      <div
-        className="guidelines-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
-          gap: '20px',
-          marginBottom: '20px',
-        }}
-      >
+      <div className="guidelines-grid">
         <section id="tour-step-2" className="glass-card guideline-card">
           <div className="guideline-card-heading">
-            <EyeOff size={22} aria-hidden="true" />
+            <span className="guideline-card-icon" aria-hidden="true">
+              <EyeOff size={20} />
+            </span>
             <h2>Privacidade e acesso</h2>
           </div>
           <p>
@@ -182,10 +176,12 @@ export const GuidelinesPage: React.FC = () => {
 
         <section id="tour-step-3" className="glass-card guideline-card">
           <div className="guideline-card-heading">
-            <MessageCircleWarning size={22} aria-hidden="true" />
+            <span className="guideline-card-icon" aria-hidden="true">
+              <MessageCircleWarning size={20} />
+            </span>
             <h2>O que relatar</h2>
           </div>
-          <ul>
+          <ul className="guideline-card-list">
             <li>Assédio, discriminação ou desrespeito no ambiente de trabalho.</li>
             <li>Fraude, desvio de recursos ou conflito de interesses.</li>
             <li>Outras condutas que possam contrariar políticas da organização.</li>
@@ -194,10 +190,12 @@ export const GuidelinesPage: React.FC = () => {
 
         <section id="tour-step-4" className="glass-card guideline-card">
           <div className="guideline-card-heading">
-            <FileText size={22} aria-hidden="true" />
+            <span className="guideline-card-icon" aria-hidden="true">
+              <FileText size={20} />
+            </span>
             <h2>Como descrever</h2>
           </div>
-          <ul>
+          <ul className="guideline-card-list">
             <li>Explique o que aconteceu com suas próprias palavras.</li>
             <li>Informe quando e onde ocorreu, mesmo que seja uma estimativa.</li>
             <li>Diferencie o que presenciou do que foi relatado por terceiros.</li>
@@ -207,7 +205,9 @@ export const GuidelinesPage: React.FC = () => {
 
         <section id="tour-step-5" className="glass-card guideline-card">
           <div className="guideline-card-heading">
-            <ClipboardList size={22} aria-hidden="true" />
+            <span className="guideline-card-icon" aria-hidden="true">
+              <ClipboardList size={20} />
+            </span>
             <h2>Após o envio</h2>
           </div>
           <p>

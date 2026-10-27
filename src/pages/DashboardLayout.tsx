@@ -1,9 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Header } from '../components/Header';
 import { Sidebar } from '../components/Sidebar';
 
-// Aqui definimos os "cabos" que esse componente aceita receber
 interface DashboardLayoutProps {
   children?: React.ReactNode;
   onLogout: () => void;
@@ -11,10 +9,8 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, onLogout }) => {
   return (
-    <div className="dashboard-shell">
-      <Header />
-
-      <div className="dashboard-body">
+    <div className="dashboard-shell no-topbar">
+      <div className="dashboard-body no-topbar">
         <Sidebar onLogout={onLogout} />
 
         <main className="dashboard-main">

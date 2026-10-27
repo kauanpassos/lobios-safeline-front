@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, BookOpen, FileSearch, Plus, RefreshCw, Search } from 'lucide-react';
+import { AlertCircle, BookOpen, ChevronRight, FileSearch, Plus, RefreshCw, Search } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { apiFetch } from '../../services/api';
 import { parseMyCaseApiItems, type CaseSummary } from '../../types/case';
@@ -43,6 +43,7 @@ export const MyCasesPage: React.FC = () => {
 
         setCases(data.map((item) => ({
           id: item.id,
+          protocol: item.protocol,
           category: item.category || 'Outro',
           title: item.title || 'Denúncia sem título',
           description: item.description || 'Detalhes protegidos. Clique para visualizar.',
@@ -78,8 +79,9 @@ export const MyCasesPage: React.FC = () => {
       if (searchTerm.trim()) {
         const term = searchTerm.toLowerCase();
         return (
-          c.title.toLowerCase().includes(term) ||
+          c.protocol.toLowerCase().includes(term) ||
           c.category.toLowerCase().includes(term) ||
+          c.title.toLowerCase().includes(term) ||
           c.description.toLowerCase().includes(term)
         );
       }
@@ -104,9 +106,6 @@ export const MyCasesPage: React.FC = () => {
           <h1>MINHAS DENÚNCIAS</h1>
           <p>Acompanhe o andamento das suas denúncias e consulte informações adicionais sempre que precisar, em um ambiente seguro e confidencial.</p>
         </div>
-        <Button variant="primary" icon={<Plus size={21} />} onClick={() => navigate('/new-report')} className="cases-new-button">
-          Nova denúncia
-        </Button>
       </section>
 
       {isLoading ? (
@@ -134,8 +133,8 @@ export const MyCasesPage: React.FC = () => {
             <label className="case-search">
               <Search size={21} aria-hidden="true" />
               <input
-                placeholder="Buscar por assunto..."
-                aria-label="Buscar por assunto"
+                placeholder="Buscar por protocolo..."
+                aria-label="Buscar por protocolo"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -152,7 +151,7 @@ export const MyCasesPage: React.FC = () => {
 
           <div className={`cases-table${showPriorityColumn ? ' has-priority' : ''}`} role="table" aria-label="Lista de denúncias">
             <div className="cases-table-header" role="row">
-              <span>Assunto</span>
+              <span>Protocolo</span>
               <span>Categoria</span>
               {showPriorityColumn && <span>Prioridade</span>}
               <span>Status</span>
@@ -176,7 +175,9 @@ export const MyCasesPage: React.FC = () => {
             ) : (
               filteredCases.map((item) => (
                 <div className="case-row" key={item.id} role="row">
-                  <span><strong>{item.title}</strong><small>{item.description}</small></span>
+                  <span>
+                    <strong className="case-protocol-code" title={item.protocol}>{item.protocol}</strong>
+                  </span>
                   <span>{item.category}</span>
                   {showPriorityColumn && <span>{item.priority ?? '—'}</span>}
                   <span><em>{item.status}</em></span>
@@ -186,8 +187,10 @@ export const MyCasesPage: React.FC = () => {
                       className="row-action"
                       type="button"
                       onClick={() => navigate(`/my-cases/${item.id}`)}
+                      aria-label={`Ver detalhes da denúncia ${item.protocol}`}
                     >
-                      Ver detalhes
+                      <span>Ver detalhes</span>
+                      <ChevronRight size={15} aria-hidden="true" />
                     </button>
                   </span>
                 </div>

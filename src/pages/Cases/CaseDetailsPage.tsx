@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, ShieldAlert, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeft,
+  FileText,
+  ShieldAlert,
+  AlertCircle,
+  RefreshCw,
+  MessageSquare,
+  Calendar,
+  Tag,
+  Shield,
+} from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { apiFetch } from '../../services/api';
 import { parseCaseDetailsResponse, type CaseDetails } from '../../types/case';
+import { formatProtocolCode } from '../../utils/protocol';
+import { decodeHtmlEntities } from '../../utils/htmlEntities';
 
 export function CaseDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,70 +67,118 @@ export function CaseDetailsPage() {
     };
   }, [id, reloadKey]);
 
+  const displayProtocol = formatProtocolCode(caseDetails?.protocol || id);
+  const formattedDate = caseDetails?.createdAt
+    ? new Date(caseDetails.createdAt).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : '';
+
+  const decodedTitle = decodeHtmlEntities(caseDetails?.title);
+  const decodedDescription = decodeHtmlEntities(caseDetails?.description);
+
   return (
-    <div className="cases-page fade-in">
-      <section className="cases-heading" style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/my-cases')}
-            icon={<ArrowLeft size={16} />}
-          >
-            Voltar
-          </Button>
-          <div>
-            <h1 style={{ fontSize: '1.6rem', marginBottom: '4px' }}>Detalhes da Denúncia</h1>
-            <p style={{ color: '#B7C9E2', fontSize: '0.9rem' }}>
-              ID do Registro: <strong style={{ color: '#F1F5F9' }}>{id}</strong>
-            </p>
-          </div>
+    <div className="cases-page fade-in case-details-view">
+      <section className="case-details-header">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/my-cases')}
+          icon={<ArrowLeft size={16} />}
+          className="case-details-back-btn"
+        >
+          Voltar
+        </Button>
+        <div className="case-details-header-info">
+          <h1>Detalhes da Denúncia</h1>
+          <p className="case-details-protocol-badge">
+            Protocolo: <strong className="case-protocol-code">{displayProtocol}</strong>
+          </p>
         </div>
       </section>
 
       {isLoading ? (
-        <div className="cases-panel" style={{ padding: '32px' }}>
+        <div className="cases-panel case-details-panel" aria-busy="true" aria-label="Carregando denúncia">
           <div className="safeline-skeleton safeline-skeleton-toolbar" />
+          <div className="safeline-skeleton safeline-skeleton-table" style={{ marginTop: '16px' }} />
         </div>
       ) : errorStatus === 403 ? (
-        <div className="cases-panel" style={{ padding: '32px', textAlign: 'center', color: '#F87171' }}>
-          <ShieldAlert size={48} style={{ margin: '0 auto 16px auto' }} />
+        <div className="cases-panel case-details-panel case-details-status-message">
+          <ShieldAlert size={48} className="case-details-error-icon" />
           <h2>Acesso Negado (403)</h2>
-          <p style={{ color: '#9AAEC9', marginTop: '8px' }}>
+          <p>
             Você não possui permissão para visualizar esta denúncia.
           </p>
+          <Button variant="outline" onClick={() => navigate('/my-cases')} icon={<ArrowLeft size={16} />}>
+            Voltar para Minhas Denúncias
+          </Button>
         </div>
       ) : errorMessage ? (
-        <div className="cases-panel" style={{ padding: '32px', textAlign: 'center' }}>
-          <AlertCircle size={48} style={{ margin: '0 auto 16px auto', color: '#F87171' }} />
+        <div className="cases-panel case-details-panel case-details-status-message">
+          <AlertCircle size={48} className="case-details-error-icon" />
           <h2>Erro ao carregar denúncia</h2>
-          <p style={{ color: '#9AAEC9', margin: '8px 0 16px 0' }}>{errorMessage}</p>
-          <Button variant="outline" icon={<RefreshCw size={16} />} onClick={handleRetry}>Tentar Novamente</Button>
+          <p>{errorMessage}</p>
+          <Button variant="outline" icon={<RefreshCw size={16} />} onClick={handleRetry}>
+            Tentar Novamente
+          </Button>
         </div>
       ) : caseDetails ? (
-        <div className="cases-panel" style={{ padding: '32px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', paddingBottom: '20px', borderBottom: '1px solid rgba(100,116,139,0.22)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(37,99,235,0.12)', border: '1px solid rgba(147,197,253,0.2)' }}>
-              <FileText size={20} style={{ color: '#93C5FD' }} />
+        <div className="cases-panel case-details-panel">
+          {/* Cabeçalho da denúncia */}
+          <div className="case-details-main-info">
+            <div className="case-details-icon-wrap" aria-hidden="true">
+              <FileText size={22} />
             </div>
-            <div>
-              <h2 style={{ fontSize: '1.2rem', color: '#F1F5F9', marginBottom: '2px' }}>{caseDetails.title}</h2>
-              <p style={{ fontSize: '0.85rem', color: '#829ABB' }}>
-                Categoria: {caseDetails.category}
-                {caseDetails.priority && <> | Prioridade: {caseDetails.priority}</>}
-              </p>
+            <div className="case-details-title-group">
+              <h2 className="case-details-title">{decodedTitle}</h2>
+              <div className="case-details-chips">
+                <span className="case-detail-chip">
+                  <Tag size={13} aria-hidden="true" />
+                  <span>Categoria: <strong>{caseDetails.category}</strong></span>
+                </span>
+                {caseDetails.priority && (
+                  <span className="case-detail-chip">
+                    <Shield size={13} aria-hidden="true" />
+                    <span>Prioridade: <strong>{caseDetails.priority}</strong></span>
+                  </span>
+                )}
+                {formattedDate && (
+                  <span className="case-detail-chip">
+                    <Calendar size={13} aria-hidden="true" />
+                    <span>Registrado em: <strong>{formattedDate}</strong></span>
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="case-details-actions-top">
+              <Button
+                variant="outline"
+                icon={<MessageSquare size={16} />}
+                onClick={() => navigate(`/mensagens/${caseDetails.id}`)}
+                className="case-details-chat-btn"
+              >
+                Abrir Mensagens
+              </Button>
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '0.95rem', color: '#93C5FD', marginBottom: '8px' }}>Status Atual</h3>
-            <span style={{ padding: '6px 12px', borderRadius: '6px', background: 'rgba(59,130,246,0.2)', color: '#60A5FA', fontWeight: 600, fontSize: '0.85rem' }}>
-              {caseDetails.status}
-            </span>
+          {/* Status atual */}
+          <div className="case-details-section">
+            <h3 className="case-details-section-title">Status do Andamento</h3>
+            <div className="case-details-status-display">
+              <span className={`case-status-badge status-${caseDetails.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                {caseDetails.status}
+              </span>
+            </div>
           </div>
 
-          <div>
-            <h3 style={{ fontSize: '0.95rem', color: '#93C5FD', marginBottom: '8px' }}>Descrição do Relato</h3>
-            <p style={{ color: '#E2E8F0', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{caseDetails.description}</p>
+          {/* Relato do ocorrido */}
+          <div className="case-details-section">
+            <h3 className="case-details-section-title">Descrição do Relato</h3>
+            <div className="case-details-description-box">
+              <p>{decodedDescription}</p>
+            </div>
           </div>
         </div>
       ) : null}

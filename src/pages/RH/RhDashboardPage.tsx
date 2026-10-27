@@ -188,7 +188,7 @@ export function RhDashboardPage() {
                 <table className="rh-data-table rh-data-table--priority">
                   <thead>
                     <tr>
-                      <th scope="col">Identificador</th>
+                      <th scope="col">Protocolo</th>
                       <th scope="col">Categoria</th>
                       <th scope="col">Prioridade</th>
                       <th scope="col">Status</th>
@@ -199,7 +199,11 @@ export function RhDashboardPage() {
                   <tbody>
                     {recentHighPriorityCases.map((item) => (
                       <tr key={item.id}>
-                        <td><span className="rh-case-code">#{item.id.slice(0, 8)}</span></td>
+                        <td>
+                          <span className="rh-case-code">
+                            {item.protocolCode || item.publicProtocolHash || `#${item.id.slice(0, 8)}`}
+                          </span>
+                        </td>
                         <td>{item.category}</td>
                         <td>{item.priority}</td>
                         <td><CaseStatusBadge status={item.status} /></td>
@@ -208,7 +212,7 @@ export function RhDashboardPage() {
                           <button
                             type="button"
                             className="rh-icon-button"
-                            aria-label={`Abrir detalhes do caso ${item.id.slice(0, 8)}`}
+                            aria-label={`Abrir detalhes do caso ${item.protocolCode || item.id.slice(0, 8)}`}
                             onClick={() => navigate(`/rh/cases/${encodeURIComponent(item.id)}`)}
                           >
                             <ArrowRight size={16} aria-hidden="true" />

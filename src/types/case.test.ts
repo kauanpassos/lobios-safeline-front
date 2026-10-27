@@ -167,4 +167,26 @@ describe('case.ts - Parsers e Normalizadores', () => {
     expect(normalizeCaseTitle('  Falha   no\n processo  ')).toBe('Falha no processo');
     expect(normalizeCaseDescription('  Linha   um\r\n\r\n\r\n linha\t dois  ')).toBe('Linha um\n\nlinha dois');
   });
+
+  it('deve decodificar entidades HTML como &#231; no título e descrição das denúncias', () => {
+    const rawCase = {
+      id: 'case-special-chars',
+      protocol: 'QBDU-DAFT-FS7A',
+      category: 'assédio',
+      title: 'Ass&#233;dio Moral - Bob Esponja sem cal&#231;a quadrada!!!',
+      description: 'Relato contendo acentua&#231;&#227;o e caracteres especiais: &#193;gua de ma&#231;&#227;.',
+      status: 'Recebido',
+      createdAt: '2026-10-01T12:00:00Z',
+    };
+
+    const [parsedMyCase] = parseMyCaseApiItems([rawCase]);
+    expect(parsedMyCase.title).toBe('Assédio Moral - Bob Esponja sem calça quadrada!!!');
+    expect(parsedMyCase.description).toBe('Relato contendo acentuação e caracteres especiais: Água de maçã.');
+    expect(parsedMyCase.protocol).toBe('QBDU-DAFT-FS7A');
+
+    const parsedDetails = parseCaseDetailsResponse(rawCase);
+    expect(parsedDetails.title).toBe('Assédio Moral - Bob Esponja sem calça quadrada!!!');
+    expect(parsedDetails.description).toBe('Relato contendo acentuação e caracteres especiais: Água de maçã.');
+    expect(parsedDetails.protocol).toBe('QBDU-DAFT-FS7A');
+  });
 });

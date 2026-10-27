@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, PlusCircle, BookOpen, User, LogOut, ChevronLeft, ChevronRight, MessageSquare, Shield, KeyRound } from 'lucide-react';
+import {
+  Home,
+  PlusCircle,
+  BookOpen,
+  User,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare,
+  Shield,
+  KeyRound,
+  Sun,
+  Moon,
+} from 'lucide-react';
+import { SidebarBrand } from './SidebarBrand';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -9,6 +23,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('safeline-theme') !== 'light');
 
   const role = localStorage.getItem('@SafeLine:role');
   const isManagementRole = role === 'ADMIN' || role === 'HR' || role === 'HR_ADMIN' || role === 'HR_MANAGER';
@@ -31,8 +46,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     onLogout();
   };
 
+  const toggleTheme = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nextMode = !isDarkMode;
+    setIsDarkMode(nextMode);
+    document.documentElement.dataset.theme = nextMode ? 'dark' : 'light';
+    localStorage.setItem('safeline-theme', nextMode ? 'dark' : 'light');
+  };
+
   return (
-    <aside className={`dashboard-sidebar${isCollapsed ? ' is-collapsed' : ''}`}>
+    <aside className={`dashboard-sidebar${isCollapsed ? ' is-collapsed' : ''}${!isManagementRole ? ' no-topbar' : ''}`}>
+      <SidebarBrand isCollapsed={isCollapsed} />
+
       <nav className="sidebar-nav" aria-label="Navegação principal">
         {isManagementRole ? (
           <>
@@ -79,6 +105,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       </nav>
 
       <div className="sidebar-footer">
+        {!isManagementRole && (
+          <button
+            type="button"
+            className={`sidebar-theme-toggle${isCollapsed ? ' is-collapsed' : ''}`}
+            onClick={toggleTheme}
+            title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+            aria-label={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {!isCollapsed && <span>{isDarkMode ? 'Modo claro' : 'Modo escuro'}</span>}
+          </button>
+        )}
+
         <button
           type="button"
           className={`sidebar-logout${isCollapsed ? ' is-collapsed' : ''}`}

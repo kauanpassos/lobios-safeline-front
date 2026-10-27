@@ -8,6 +8,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { CaseStatusBadge } from '../../components/rh/CaseStatusBadge';
+
 import { getApiErrorMessage } from '../../services/api';
 import { fetchAdminCases } from '../../services/rhService';
 import {
@@ -18,6 +19,7 @@ import {
   type CasePriority,
   type CaseStatus,
 } from '../../types/case';
+import { decodeHtmlEntities } from '../../utils/htmlEntities';
 
 const formatDate = (value?: string, fallback?: string): string => {
   if (!value) return fallback || 'Não informado';
@@ -66,6 +68,8 @@ export function RhCasesListPage() {
   const normalizedSearch = searchTerm.trim().toLocaleLowerCase('pt-BR');
   const filteredCases = cases.filter((item) => {
     const matchesSearch = !normalizedSearch || [
+      item.protocolCode,
+      item.publicProtocolHash,
       item.id,
       item.title,
       item.description,
@@ -132,7 +136,7 @@ export function RhCasesListPage() {
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Buscar por código, relato ou categoria"
+            placeholder="Buscar por protocolo, relato ou categoria"
           />
         </label>
 
@@ -220,7 +224,7 @@ export function RhCasesListPage() {
             <table className="rh-data-table rh-data-table--cases">
               <thead>
                 <tr>
-                  <th scope="col">Identificador</th>
+                  <th scope="col">Protocolo</th>
                   <th scope="col">Categoria</th>
                   <th scope="col">Resumo</th>
                   <th scope="col">Status</th>
@@ -234,11 +238,13 @@ export function RhCasesListPage() {
                 {filteredCases.map((item) => (
                   <tr key={item.id}>
                     <td>
-                      <span className="rh-case-code">#{item.id.slice(0, 8)}</span>
+                      <span className="rh-case-code">
+                        {item.protocolCode || item.publicProtocolHash || `#${item.id.slice(0, 8)}`}
+                      </span>
                     </td>
                     <td>{item.category}</td>
-                    <td className="rh-table-summary" title={item.description || item.content}>
-                      {item.description || item.content || item.title || 'Sem descrição.'}
+                    <td className="rh-table-summary" title={decodeHtmlEntities(item.description || item.content || '')}>
+                      {decodeHtmlEntities(item.description || item.content || item.title || 'Sem descrição.')}
                     </td>
                     <td><CaseStatusBadge status={item.status} /></td>
                     <td>{item.priority || 'Não classificada'}</td>
@@ -249,7 +255,7 @@ export function RhCasesListPage() {
                         <button
                           type="button"
                           className="rh-icon-button"
-                          aria-label={`Abrir detalhes do caso ${item.id.slice(0, 8)}`}
+                          aria-label={`Abrir detalhes do caso ${item.protocolCode || item.id.slice(0, 8)}`}
                           onClick={() => navigate(`/rh/cases/${encodeURIComponent(item.id)}`)}
                         >
                           <FileText size={16} aria-hidden="true" />
